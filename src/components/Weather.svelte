@@ -47,7 +47,7 @@
   fetchForecast("Hlavní město Praha");
 </script>
 
-<style>
+<style type="text/scss">
   .svg-def {
     position: absolute;
     width: 0;
@@ -94,9 +94,31 @@
     );
   }
 
-  .weather-bg-linear,
   .weather-bg-radial {
     height: 100vh;
+  }
+
+  .weather-bg {
+    width: 100vw;
+    position: fixed;
+  }
+  .weather-bg,
+  .weather-scroll {
+    top: 0;
+    left: 0;
+  }
+
+  .weather-scroll {
+    position: fixed;
+    display: flex;
+    overflow-y: hidden;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  .weather-column {
+    flex: 1 0 100vw;
+    max-width: 30rem;
   }
 </style>
 
@@ -122,7 +144,7 @@
   </defs>
 </svg>
 
-<div class="weather-bg-linear">
+<div class="weather-bg weather-bg-linear">
   <div class="weather-bg-radial">
 
     <svg class="star" viewBox="0 0 32 32">
@@ -164,4 +186,10 @@
 
     </svg>
   </div>
+</div>
+
+<div class="weather-scroll">
+  {#each forecastMock.list as forecast}
+    <div class="weather-column">{forecast.weather[0].main}</div>
+  {/each}
 </div>
