@@ -98,21 +98,17 @@
     height: 100vh;
   }
 
-  .weather-bg {
-    width: 100vw;
-    position: fixed;
-  }
   .weather-bg,
   .weather-scroll {
     top: 0;
     left: 0;
+    width: 100vw;
+    position: fixed;
   }
 
   .weather-scroll {
-    position: fixed;
     display: flex;
     overflow-y: hidden;
-    width: 100vw;
     height: 100vh;
   }
 
