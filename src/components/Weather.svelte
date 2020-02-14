@@ -1,50 +1,82 @@
 <script>
+  import { sunCalc } from "../helpers/suncalc";
   import { Moon } from "../helpers/moon-functions";
   import { forecastMock } from "../helpers/mock";
-  // let moonPhase;
-  let moonLeft;
-  let moonRight;
+  import { onMount } from "svelte";
 
   const moon = new Moon();
   const forecastUrl =
     "http://api.openweathermap.org/data/2.5/forecast?q=_city_&APPID=a77e1d2fcad267b4ba535bd5fd05b6e7";
+
+  let moonLeft = 0;
+  let moonRight = 0;
+  let scrollX;
+  let elWeatherColumnWidth;
+  let dataSet;
+  let prevMoonPhase;
+  let nearestForecastDate;
+
+  let moonBottomPosition;
+  let moonLeftPosition;
+  let moonRotationDeg;
+  let scrollDate = new Date();
+  $: dateTime = scrollDate;
+
+  onMount(() => {
+    fetchForecast("Hlavní město Praha");
+  });
+
+  function weatherScroll(event) {
+    window.requestAnimationFrame(() => {
+      countOnScrollFrame(event.target.scrollLeft);
+    });
+  }
+
+  function setDefaultValues(data) {
+    nearestForecastDate = new Date(data.list[0].dt_txt);
+    prevMoonPhase = sunCalc.getMoonIllumination(nearestForecastDate).phase;
+  }
+
+  function animateMoon(date) {
+    let moonPhase = sunCalc.getMoonIllumination(date).phase; // 0 - 1;
+
+    moonLeft = moonPhase < 0.5 ? 7.8 - moonPhase * 31.2 : -7.8;
+    moonRight = moonPhase >= 0.5 ? 7.8 - (moonPhase - 0.5) * 31.2 : 7.8;
+    prevMoonPhase = moonPhase;
+
+    const coords = dataSet.city.coord;
+    const moonPosition = sunCalc.getMoonPosition(date, coords.lat, coords.lon);
+
+    moonBottomPosition =
+      (moonPosition.altitude * 100) / (Math.PI / 2) + 14 + "vh"; // 14 is extra for the bottom terrain
+
+    moonLeftPosition = 10 + "vh";
+
+    moonRotationDeg = (moonPosition.parallacticAngle * 180) / Math.PI;
+    // max = Pi/2 rad
+  }
+
+  function countOnScrollFrame(scrollLeft) {
+    const threeHoursInMs = 3 * 60 * 60 * 1000;
+    const onePxInMs = threeHoursInMs / elWeatherColumnWidth;
+    scrollDate = new Date(
+      nearestForecastDate.getTime() + onePxInMs * scrollLeft
+    );
+
+    animateMoon(scrollDate);
+  }
 
   const fetchForecast = async city => {
     /*  const urlWithCity = forecastUrl.replace("_city_", city);
     const response = await fetch(urlWithCity);
     const data = await response.json(); */
 
-    const data = forecastMock;
-    console.log(data);
+    dataSet = forecastMock;
+    setDefaultValues(dataSet);
 
-    let count = 1;
-
-    let prevMoonPhase = moon.phase(2020, 1, count - 1).phase;
-    let interval;
-    const framerate = 30;
-
-    setInterval(() => {
-      const result = moon.phase(2020, 1, count);
-      let moonPhase = result.phase; // 0 - 7;
-
-      let difference = moonPhase - prevMoonPhase;
-      if (difference < 0) difference = 8 - prevMoonPhase;
-      let tickDifference = difference / framerate;
-
-      clearInterval(interval);
-      interval = setInterval(() => {
-        moonLeft = moonPhase < 4 ? 7.8 - moonPhase * 3.9 : -7.8;
-        moonRight = moonPhase >= 4 ? 7.8 - (moonPhase - 4) * 3.9 : 7.8;
-
-        if (moonPhase + tickDifference <= 8) moonPhase += tickDifference;
-      }, 1000 / framerate);
-
-      prevMoonPhase = moonPhase;
-      count++;
-    }, 1000);
+    // make initial render
+    countOnScrollFrame(0);
   };
-
-  fetchForecast("Hlavní město Praha");
 </script>
 
 <style type="text/scss">
@@ -65,9 +97,26 @@
     fill: #ffdd40;
   }
   .moon {
-    width: 200px;
-    height: 200px;
-    fill: #ffed9c;
+    $moonWidth: 10vh;
+    width: 0;
+    height: 0;
+    position: absolute;
+
+    .moon-svg {
+      width: $moonWidth * 2.75;
+      height: $moonWidth * 2.75;
+      fill: #ffed9c;
+      transform: translate(-50%, -50%);
+    }
+
+    .moon-bg {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      background-color: rgba(200, 200, 200, 0.015);
+      width: $moonWidth;
+      height: $moonWidth;
+      border-radius: 50%;
+    }
   }
 
   .glow-filter {
@@ -86,6 +135,7 @@
     /* linear-gradient( 0deg, rgb(64, 0, 90) 0%, rgb(127, 95, 175) 100% ); */
   }
   .weather-bg-radial {
+    height: 100vh;
     background: rgb(63, 94, 251);
     background: radial-gradient(
       circle at 30% 40%,
@@ -94,27 +144,47 @@
     );
   }
 
-  .weather-bg-radial {
-    height: 100vh;
-  }
-
-  .weather-bg,
-  .weather-scroll {
+  .weather-bg {
     top: 0;
     left: 0;
     width: 100vw;
     position: fixed;
+
+    .ground {
+      $size: 300vh;
+      position: absolute;
+      height: $size;
+      width: $size;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: calc(#{-$size} + 20vh);
+      background: rgb(0, 47, 0);
+      background: radial-gradient(
+        circle closest-side,
+        rgba(42, 15, 95, 1) 85%,
+        #797858 100%
+      );
+
+      border-radius: 50%;
+    }
   }
 
   .weather-scroll {
     display: flex;
     overflow-y: hidden;
     height: 100vh;
+    position: relative;
   }
 
   .weather-column {
-    flex: 1 0 100vw;
-    max-width: 30rem;
+    flex: 1 0 10rem;
+  }
+  .date-time {
+    position: absolute;
+    top: 10vh;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 3rem;
   }
 </style>
 
@@ -143,6 +213,8 @@
 <div class="weather-bg weather-bg-linear">
   <div class="weather-bg-radial">
 
+    <div class="date-time">{dateTime}</div>
+
     <svg class="star" viewBox="0 0 32 32">
 
       <path
@@ -151,19 +223,27 @@
         2.564-0.621 3.62 3.251-1.709 3.251 1.709-0.621-3.62z" />
 
     </svg>
-    <svg class="moon" viewBox="0 0 32 32">
+    <div
+      class="moon"
+      style="bottom:{moonBottomPosition}; left:{moonLeftPosition}; transform:
+      rotate({moonRotationDeg}deg)">
+      <div class="moon-bg" />
+      <svg class="moon-svg" viewBox="0 0 32 32">
 
-      <path
-        class="glow-filter"
-        d="M16.034 21.918c{moonLeft} 0.000 {moonLeft} -11.743 0-11.741 {moonRight}
-        0.023 {moonRight} 11.743 0 11.741z" />
-      <!--  <path
+        <path
+          class="glow-filter"
+          d="M16.034 21.918c{moonLeft} 0.000 {moonLeft} -11.743 0-11.741 {moonRight}
+          0.023 {moonRight} 11.743 0 11.741z" />
+        <!--  <path
         class="glow-filter"
         d="M16.034 21.918c-7.812 0.072-7.812-11.743 0-11.741 7.792 0.023 7.792
         11.743 0 11.741z" /> -->
 
-    </svg>
-    <svg class="sun" viewBox="0 0 32 32">
+      </svg>
+
+    </div>
+
+    <!-- <svg class="sun" viewBox="0 0 32 32">
 
       <path
         class="glow-filter"
@@ -180,12 +260,17 @@
         3.038s-3.038-1.36-3.038-3.038c0-1.678 1.36-3.038 3.038-3.038s3.038 1.36
         3.038 3.038z" />
 
-    </svg>
+    </svg> -->
+
+    <div class="ground" />
+
   </div>
 </div>
 
-<div class="weather-scroll">
+<div class="weather-scroll" on:scroll={weatherScroll}>
   {#each forecastMock.list as forecast}
-    <div class="weather-column">{forecast.weather[0].main}</div>
+    <div class="weather-column" bind:offsetWidth={elWeatherColumnWidth}>
+      {forecast.dt_txt}
+    </div>
   {/each}
 </div>

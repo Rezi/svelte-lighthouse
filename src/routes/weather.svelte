@@ -63,14 +63,14 @@
     background: linear-gradient(to bottom, #303355, #111119);
   }
 
-  .weather-page :global(.rain) {
+  /*   .weather-page :global(.rain) {
     position: absolute;
     left: 0;
     width: 100%;
     height: 100%;
     z-index: 2;
     overflow: hidden;
-  }
+  } */
 
   .weather-page :global(.rain.back-row) {
     z-index: 1;
