@@ -8,7 +8,7 @@
 
   let moonLeft = 0;
   let moonRight = 0;
-  let scrollX;
+  let fromLeft = 0;
   let elWeatherColumnWidth;
   let dataSet;
   let prevMoonPhase;
@@ -17,6 +17,7 @@
   let moonBottomPosition;
   let moonLeftPosition;
   let moonRotationDeg;
+  let moonOpacity01To1;
 
   let sunBottomPosition;
   let sunLeftPosition;
@@ -29,13 +30,23 @@
   let scrollDate = new Date();
   let scrollLeftGrouped = 0;
   let dateTime = scrollDate;
+  let isMobile;
 
   onMount(() => {
+    isMobile = isMobileDevice();
     fetchForecast("Hlavní město Praha");
   });
 
+  function isMobileDevice() {
+    return false;
+    return (
+      typeof window.orientation !== "undefined" ||
+      navigator.userAgent.indexOf("IEMobile") !== -1
+    );
+  }
+
   function weatherScroll(event) {
-    const fromLeft = event.target.scrollLeft;
+    fromLeft = event.target.scrollLeft;
     let animationKey = false;
     // only trigger animation each 50px of scrolling, 50px transitions are made by css transitions
     if (
@@ -89,24 +100,33 @@
   }
 
   function colorSky(sunAngleDeg, animationKey) {
-    /*     sunDegAngle */
-    if (animationKey) {
-      let lightness = sunAngleDeg < -30 ? -30 : sunAngleDeg;
-      lightness += 30;
-      lightness = Math.pow(lightness, 0.8);
-      lightness += 15;
+    const itemScrolled = Math.floor(fromLeft / elWeatherColumnWidth);
+    const scrolledForecast = dataSet.list[itemScrolled];
+    const cloudsInPercent = scrolledForecast.clouds.all;
 
-      const darkness = 1 - lightness / 100;
+    const saturation = 20 + (100 - cloudsInPercent) * 0.5; // saturation 20 - 70% depending on clouds
+    // const saturation = 100; // saturation 20 - 70% depending on clouds
 
-      const skyTopHslMax = 264;
-      const skyBottomHslMax = 283;
-      const skyTopHsl = skyTopHslMax - lightness * 1.5;
-      const skyBottomHsl = skyBottomHslMax - lightness * 1.5;
+    let lightness = sunAngleDeg < -5 ? -5 : sunAngleDeg; // start 5deg below horizon
+    lightness += 5; // ensure we start with lightness of at least 0
+    lightness = lightness > 100 ? 100 : lightness; // 0 - 100
 
-      skyTop = `hsl(${skyTopHsl}, 56%, ${lightness}%)`;
-      skyBottom = `hsl(${skyBottomHsl}, 39%, ${lightness}%)`;
-      skyHalo = `hsla(0, 0%, 0%, ${darkness})`;
-    }
+    const lightnessTo16 = lightness / 6.25; // 0 - 16
+    const lightnessExponential = Math.pow(lightnessTo16, 0.25); // 0-2;  1 => 1,  16 => 2
+    const lightnessExponential8To60 = lightnessExponential * 26 + 8;
+    moonOpacity01To1 = (1 - lightnessExponential * 0.45).toFixed(2);
+
+    const darkness = 1 - lightness / 100;
+
+    const skyTopHslMax = 243;
+    const skyBottomHslMax = 223;
+
+    const skyTopHsl = skyTopHslMax - lightnessExponential8To60 * 0.8;
+    const skyBottomHsl = skyBottomHslMax - lightnessExponential8To60 * 0.8;
+
+    skyTop = `hsl(${skyTopHsl}, ${saturation}%, ${lightnessExponential8To60}%)`;
+    skyBottom = `hsl(${skyBottomHsl}, ${saturation}%, ${lightnessExponential8To60}%)`;
+    skyHalo = `hsla(0, 0%, 0%, ${darkness})`;
   }
 
   function countOnScrollFrame(scrollLeft, animationKey) {
@@ -116,9 +136,9 @@
       nearestForecastDate.getTime() + onePxInMs * scrollLeft
     );
 
-    if (animationKey) {
-      dateTime = scrollDate;
-    }
+    //if (animationKey) {
+    dateTime = scrollDate;
+    // }
 
     animateMoon(scrollDate, animationKey);
     animateSun(scrollDate, animationKey);
@@ -193,10 +213,10 @@
     }
   }
 
-  /* .glow-filter {
+  .glow-filter {
     filter: url("#strokeGlow");
     -webkit-filter: url("#strokeGlow");
-  } */
+  }
 
   .weather-bg-radial {
     height: 100vh;
@@ -282,20 +302,20 @@
     <svg class="star" viewBox="0 0 32 32">
 
       <path
-        class="glow-filter"
+        class:glow-filter={!isMobile}
         d="M21.557 14.914l-3.635-0.528-1.625-3.293-1.625 3.293-3.635 0.528 2.63
         2.564-0.621 3.62 3.251-1.709 3.251 1.709-0.621-3.62z" />
 
     </svg>
     <div
       class="moon"
-      style="transform:translate({moonLeftPosition},-{moonBottomPosition})
+      style="opacity:{moonOpacity01To1};transform:translate({moonLeftPosition},-{moonBottomPosition})
       rotate({moonRotationDeg}deg)">
       <div class="moon-bg" />
       <svg class="moon-svg" viewBox="0 0 32 32">
 
         <path
-          class="glow-filter"
+          class:glow-filter={!isMobile}
           d="M16.034 21.918c{moonLeft} 0.000 {moonLeft} -11.743 0-11.741 {moonRight}
           0.023 {moonRight} 11.743 0 11.741z" />
         <!--  <path
@@ -312,7 +332,7 @@
       style="transform:translate({sunLeftPosition},-{sunBottomPosition})">
       <svg class="sun-svg" viewBox="0 0 32 32">
         <path
-          class="glow-filter"
+          class:glow-filter={!isMobile}
           d="M22.589 15.229l0.051 1.010-2.813 0.142-0.051-1.010zM21.312
           12.035l0.525 0.865-2.408 1.463-0.525-0.865zM18.477 9.895l0.911
           0.439-1.223 2.538-0.911-0.439zM15.059 9.479l1.010-0.051 0.142
@@ -338,6 +358,8 @@
   {#each forecastMock.list as forecast}
     <div class="weather-column" bind:offsetWidth={elWeatherColumnWidth}>
       {forecast.dt_txt}
+      <br />
+      {forecast.clouds.all}
     </div>
   {/each}
 </div>

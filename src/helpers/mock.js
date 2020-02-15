@@ -37,7 +37,7 @@ export const forecastMock = {
       sys: {
         pod: "n"
       },
-      dt_txt: "2020-02-13 21:00:00"
+      dt_txt: "2020-06-13 21:00:00"
     },
     {
       dt: 1581638400,
@@ -73,7 +73,7 @@ export const forecastMock = {
       sys: {
         pod: "n"
       },
-      dt_txt: "2020-02-14 00:00:00"
+      dt_txt: "2020-06-14 00:00:00"
     },
     {
       dt: 1581649200,
@@ -109,7 +109,7 @@ export const forecastMock = {
       sys: {
         pod: "n"
       },
-      dt_txt: "2020-02-14 03:00:00"
+      dt_txt: "2020-06-14 03:00:00"
     },
     {
       dt: 1581660000,
@@ -145,7 +145,7 @@ export const forecastMock = {
       sys: {
         pod: "n"
       },
-      dt_txt: "2020-02-14 06:00:00"
+      dt_txt: "2020-06-14 06:00:00"
     },
     {
       dt: 1581670800,
@@ -181,7 +181,7 @@ export const forecastMock = {
       sys: {
         pod: "d"
       },
-      dt_txt: "2020-02-14 09:00:00"
+      dt_txt: "2020-06-14 09:00:00"
     },
     {
       dt: 1581681600,
@@ -217,7 +217,7 @@ export const forecastMock = {
       sys: {
         pod: "d"
       },
-      dt_txt: "2020-02-14 12:00:00"
+      dt_txt: "2020-06-14 12:00:00"
     },
     {
       dt: 1581692400,
@@ -253,7 +253,7 @@ export const forecastMock = {
       sys: {
         pod: "d"
       },
-      dt_txt: "2020-02-14 15:00:00"
+      dt_txt: "2020-06-14 15:00:00"
     },
     {
       dt: 1581703200,
@@ -286,7 +286,7 @@ export const forecastMock = {
       sys: {
         pod: "n"
       },
-      dt_txt: "2020-02-14 18:00:00"
+      dt_txt: "2020-06-14 18:00:00"
     },
     {
       dt: 1581714000,
@@ -319,7 +319,7 @@ export const forecastMock = {
       sys: {
         pod: "n"
       },
-      dt_txt: "2020-02-14 21:00:00"
+      dt_txt: "2020-06-14 21:00:00"
     },
     {
       dt: 1581724800,
@@ -352,7 +352,7 @@ export const forecastMock = {
       sys: {
         pod: "n"
       },
-      dt_txt: "2020-02-15 00:00:00"
+      dt_txt: "2020-06-15 00:00:00"
     },
     {
       dt: 1581735600,
@@ -385,7 +385,7 @@ export const forecastMock = {
       sys: {
         pod: "n"
       },
-      dt_txt: "2020-02-15 03:00:00"
+      dt_txt: "2020-06-15 03:00:00"
     },
     {
       dt: 1581746400,
@@ -418,7 +418,7 @@ export const forecastMock = {
       sys: {
         pod: "n"
       },
-      dt_txt: "2020-02-15 06:00:00"
+      dt_txt: "2020-06-15 06:00:00"
     },
     {
       dt: 1581757200,
@@ -451,7 +451,7 @@ export const forecastMock = {
       sys: {
         pod: "d"
       },
-      dt_txt: "2020-02-15 09:00:00"
+      dt_txt: "2020-06-15 09:00:00"
     },
     {
       dt: 1581768000,
@@ -484,7 +484,7 @@ export const forecastMock = {
       sys: {
         pod: "d"
       },
-      dt_txt: "2020-02-15 12:00:00"
+      dt_txt: "2020-06-15 12:00:00"
     },
     {
       dt: 1581778800,
@@ -517,7 +517,7 @@ export const forecastMock = {
       sys: {
         pod: "d"
       },
-      dt_txt: "2020-02-15 15:00:00"
+      dt_txt: "2020-06-15 15:00:00"
     },
     {
       dt: 1581789600,
@@ -550,7 +550,7 @@ export const forecastMock = {
       sys: {
         pod: "n"
       },
-      dt_txt: "2020-02-15 18:00:00"
+      dt_txt: "2020-06-15 18:00:00"
     },
     {
       dt: 1581800400,
@@ -583,7 +583,7 @@ export const forecastMock = {
       sys: {
         pod: "n"
       },
-      dt_txt: "2020-02-15 21:00:00"
+      dt_txt: "2020-06-15 21:00:00"
     },
     {
       dt: 1581811200,
@@ -616,7 +616,7 @@ export const forecastMock = {
       sys: {
         pod: "n"
       },
-      dt_txt: "2020-02-16 00:00:00"
+      dt_txt: "2020-06-16 00:00:00"
     },
     {
       dt: 1581822000,
@@ -649,7 +649,7 @@ export const forecastMock = {
       sys: {
         pod: "n"
       },
-      dt_txt: "2020-02-16 03:00:00"
+      dt_txt: "2020-06-16 03:00:00"
     },
     {
       dt: 1581832800,
@@ -682,7 +682,7 @@ export const forecastMock = {
       sys: {
         pod: "n"
       },
-      dt_txt: "2020-02-16 06:00:00"
+      dt_txt: "2020-06-16 06:00:00"
     },
     {
       dt: 1581843600,
@@ -715,7 +715,7 @@ export const forecastMock = {
       sys: {
         pod: "d"
       },
-      dt_txt: "2020-02-16 09:00:00"
+      dt_txt: "2020-06-16 09:00:00"
     },
     {
       dt: 1581854400,
@@ -748,7 +748,7 @@ export const forecastMock = {
       sys: {
         pod: "d"
       },
-      dt_txt: "2020-02-16 12:00:00"
+      dt_txt: "2020-06-16 12:00:00"
     },
     {
       dt: 1581865200,
@@ -781,7 +781,7 @@ export const forecastMock = {
       sys: {
         pod: "d"
       },
-      dt_txt: "2020-02-16 15:00:00"
+      dt_txt: "2020-06-16 15:00:00"
     },
     {
       dt: 1581876000,
@@ -814,7 +814,7 @@ export const forecastMock = {
       sys: {
         pod: "n"
       },
-      dt_txt: "2020-02-16 18:00:00"
+      dt_txt: "2020-06-16 18:00:00"
     },
     {
       dt: 1581886800,
@@ -847,7 +847,7 @@ export const forecastMock = {
       sys: {
         pod: "n"
       },
-      dt_txt: "2020-02-16 21:00:00"
+      dt_txt: "2020-06-16 21:00:00"
     },
     {
       dt: 1581897600,
@@ -880,7 +880,7 @@ export const forecastMock = {
       sys: {
         pod: "n"
       },
-      dt_txt: "2020-02-17 00:00:00"
+      dt_txt: "2020-06-17 00:00:00"
     },
     {
       dt: 1581908400,
@@ -913,7 +913,7 @@ export const forecastMock = {
       sys: {
         pod: "n"
       },
-      dt_txt: "2020-02-17 03:00:00"
+      dt_txt: "2020-06-17 03:00:00"
     },
     {
       dt: 1581919200,
@@ -946,7 +946,7 @@ export const forecastMock = {
       sys: {
         pod: "n"
       },
-      dt_txt: "2020-02-17 06:00:00"
+      dt_txt: "2020-06-17 06:00:00"
     },
     {
       dt: 1581930000,
@@ -979,7 +979,7 @@ export const forecastMock = {
       sys: {
         pod: "d"
       },
-      dt_txt: "2020-02-17 09:00:00"
+      dt_txt: "2020-06-17 09:00:00"
     },
     {
       dt: 1581940800,
@@ -1012,7 +1012,7 @@ export const forecastMock = {
       sys: {
         pod: "d"
       },
-      dt_txt: "2020-02-17 12:00:00"
+      dt_txt: "2020-06-17 12:00:00"
     },
     {
       dt: 1581951600,
@@ -1045,7 +1045,7 @@ export const forecastMock = {
       sys: {
         pod: "d"
       },
-      dt_txt: "2020-02-17 15:00:00"
+      dt_txt: "2020-06-17 15:00:00"
     },
     {
       dt: 1581962400,
@@ -1081,7 +1081,7 @@ export const forecastMock = {
       sys: {
         pod: "n"
       },
-      dt_txt: "2020-02-17 18:00:00"
+      dt_txt: "2020-06-17 18:00:00"
     },
     {
       dt: 1581973200,
@@ -1114,7 +1114,7 @@ export const forecastMock = {
       sys: {
         pod: "n"
       },
-      dt_txt: "2020-02-17 21:00:00"
+      dt_txt: "2020-06-17 21:00:00"
     },
     {
       dt: 1581984000,
@@ -1147,7 +1147,7 @@ export const forecastMock = {
       sys: {
         pod: "n"
       },
-      dt_txt: "2020-02-18 00:00:00"
+      dt_txt: "2020-06-18 00:00:00"
     },
     {
       dt: 1581994800,
@@ -1180,7 +1180,7 @@ export const forecastMock = {
       sys: {
         pod: "n"
       },
-      dt_txt: "2020-02-18 03:00:00"
+      dt_txt: "2020-06-18 03:00:00"
     },
     {
       dt: 1582005600,
@@ -1213,7 +1213,7 @@ export const forecastMock = {
       sys: {
         pod: "n"
       },
-      dt_txt: "2020-02-18 06:00:00"
+      dt_txt: "2020-06-18 06:00:00"
     },
     {
       dt: 1582016400,
@@ -1246,7 +1246,7 @@ export const forecastMock = {
       sys: {
         pod: "d"
       },
-      dt_txt: "2020-02-18 09:00:00"
+      dt_txt: "2020-06-18 09:00:00"
     },
     {
       dt: 1582027200,
@@ -1279,7 +1279,7 @@ export const forecastMock = {
       sys: {
         pod: "d"
       },
-      dt_txt: "2020-02-18 12:00:00"
+      dt_txt: "2020-06-18 12:00:00"
     },
     {
       dt: 1582038000,
@@ -1312,7 +1312,7 @@ export const forecastMock = {
       sys: {
         pod: "d"
       },
-      dt_txt: "2020-02-18 15:00:00"
+      dt_txt: "2020-06-18 15:00:00"
     },
     {
       dt: 1582048800,
@@ -1345,7 +1345,7 @@ export const forecastMock = {
       sys: {
         pod: "n"
       },
-      dt_txt: "2020-02-18 18:00:00"
+      dt_txt: "2020-06-18 18:00:00"
     }
   ],
   city: {
