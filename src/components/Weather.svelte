@@ -1,10 +1,8 @@
 <script>
   import { sunCalc } from "../helpers/suncalc";
-  import { Moon } from "../helpers/moon-functions";
   import { forecastMock } from "../helpers/mock";
   import { onMount } from "svelte";
 
-  const moon = new Moon();
   const forecastUrl =
     "http://api.openweathermap.org/data/2.5/forecast?q=_city_&APPID=a77e1d2fcad267b4ba535bd5fd05b6e7";
 
@@ -19,6 +17,15 @@
   let moonBottomPosition;
   let moonLeftPosition;
   let moonRotationDeg;
+
+  let sunBottomPosition;
+  let sunLeftPosition;
+  let sunDegAngle;
+
+  let skyTop;
+  let skyBottom;
+  let skyHalo;
+
   let scrollDate = new Date();
   $: dateTime = scrollDate;
 
@@ -55,6 +62,37 @@
     moonRotationDeg = (moonPosition.parallacticAngle * 180) / Math.PI;
     // max = Pi/2 rad
   }
+  function animateSun(date) {
+    const coords = dataSet.city.coord;
+    /*     const sunTimes = sunCalc.getTimes(date, coords.lat, coords.lon, 0);
+    console.log(sunTimes); */
+
+    const sunPosition = sunCalc.getPosition(date, coords.lat, coords.lon);
+    sunDegAngle = (sunPosition.altitude * 100) / (Math.PI / 2);
+    sunBottomPosition = sunDegAngle + 14 + "vh"; // 14 is extra for the bottom terrain
+
+    sunLeftPosition = 10 + "vh";
+  }
+
+  function colorSky(sunAngleDeg) {
+    /*     sunDegAngle */
+
+    let lightness = sunAngleDeg < -30 ? -30 : sunAngleDeg;
+    lightness += 30;
+    lightness = Math.pow(lightness, 0.8);
+    lightness += 15;
+
+    const darkness = 1 - lightness / 100;
+
+    const skyTopHslMax = 264;
+    const skyBottomHslMax = 283;
+    const skyTopHsl = skyTopHslMax - lightness * 1.5;
+    const skyBottomHsl = skyBottomHslMax - lightness * 1.5;
+
+    skyTop = `hsl(${skyTopHsl}, 56%, ${lightness}%)`;
+    skyBottom = `hsl(${skyBottomHsl}, 39%, ${lightness}%)`;
+    skyHalo = `hsla(0, 0%, 0%, ${darkness})`;
+  }
 
   function countOnScrollFrame(scrollLeft) {
     const threeHoursInMs = 3 * 60 * 60 * 1000;
@@ -64,6 +102,8 @@
     );
 
     animateMoon(scrollDate);
+    animateSun(scrollDate);
+    colorSky(sunDegAngle);
   }
 
   const fetchForecast = async city => {
@@ -92,10 +132,19 @@
     fill: #cafbff;
   }
   .sun {
-    width: 250px;
-    height: 250px;
-    fill: #ffdd40;
+    $sunnWidth: 10vh;
+    width: 0;
+    height: 0;
+    position: absolute;
+
+    .sun-svg {
+      width: $sunnWidth * 2.75;
+      height: $sunnWidth * 2.75;
+      fill: #ffdd40;
+      transform: translate(-50%, -50%);
+    }
   }
+
   .moon {
     $moonWidth: 10vh;
     width: 0;
@@ -124,24 +173,8 @@
     -webkit-filter: url("#strokeGlow");
   }
 
-  .weather-bg-linear {
-    background: rgb(0, 215, 250);
-    background: linear-gradient(
-      0deg,
-      rgb(157, 92, 183) 0%,
-      rgb(48, 24, 84) 100%
-    );
-
-    /* linear-gradient( 0deg, rgb(64, 0, 90) 0%, rgb(127, 95, 175) 100% ); */
-  }
   .weather-bg-radial {
     height: 100vh;
-    background: rgb(63, 94, 251);
-    background: radial-gradient(
-      circle at 30% 40%,
-      rgba(63, 94, 251, 0) 0%,
-      rgba(0, 0, 0, 0.61) 100%
-    );
   }
 
   .weather-bg {
@@ -184,7 +217,8 @@
     top: 10vh;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 3rem;
+    font-size: 1rem;
+    color: wheat;
   }
 </style>
 
@@ -210,8 +244,13 @@
   </defs>
 </svg>
 
-<div class="weather-bg weather-bg-linear">
-  <div class="weather-bg-radial">
+<div
+  class="weather-bg weather-bg-linear"
+  style="background: linear-gradient( 0deg, {skyBottom} 0%, {skyTop} 100% );">
+  <div
+    class="weather-bg-radial"
+    style="background: radial-gradient( circle at 30% 40%, rgba(0, 0, 0, 0) 0%, {skyHalo}
+    100% );">
 
     <div class="date-time">{dateTime}</div>
 
@@ -243,24 +282,25 @@
 
     </div>
 
-    <!-- <svg class="sun" viewBox="0 0 32 32">
+    <div class="sun" style="bottom:{sunBottomPosition}; left:{sunLeftPosition}">
+      <svg class="sun-svg" viewBox="0 0 32 32">
+        <path
+          class="glow-filter"
+          d="M22.589 15.229l0.051 1.010-2.813 0.142-0.051-1.010zM21.312
+          12.035l0.525 0.865-2.408 1.463-0.525-0.865zM18.477 9.895l0.911
+          0.439-1.223 2.538-0.911-0.439zM15.059 9.479l1.010-0.051 0.142
+          2.813-1.010 0.051zM11.805 10.945l0.81-0.606 1.687 2.256-0.81
+          0.606zM9.807 13.712l0.439-0.911 2.538 1.223-0.439 0.911zM9.524
+          17.277l-0.149-1.001 2.786-0.416 0.149 1.001zM11 20.366l-0.602-0.813
+          2.264-1.676 0.602 0.813zM13.829 22.314l-0.915-0.432 1.204-2.547 0.915
+          0.432zM17.394 22.515l-1.001 0.149-0.416-2.786 1.001-0.149zM20.457
+          20.974l-0.813 0.602-1.676-2.264 0.813-0.602zM22.35 17.95l-0.341
+          0.952-2.652-0.95 0.341-0.952zM19.055 16.043c0 1.678-1.36 3.038-3.038
+          3.038s-3.038-1.36-3.038-3.038c0-1.678 1.36-3.038 3.038-3.038s3.038
+          1.36 3.038 3.038z" />
 
-      <path
-        class="glow-filter"
-        d="M22.589 15.229l0.051 1.010-2.813 0.142-0.051-1.010zM21.312
-        12.035l0.525 0.865-2.408 1.463-0.525-0.865zM18.477 9.895l0.911
-        0.439-1.223 2.538-0.911-0.439zM15.059 9.479l1.010-0.051 0.142
-        2.813-1.010 0.051zM11.805 10.945l0.81-0.606 1.687 2.256-0.81
-        0.606zM9.807 13.712l0.439-0.911 2.538 1.223-0.439 0.911zM9.524
-        17.277l-0.149-1.001 2.786-0.416 0.149 1.001zM11 20.366l-0.602-0.813
-        2.264-1.676 0.602 0.813zM13.829 22.314l-0.915-0.432 1.204-2.547 0.915
-        0.432zM17.394 22.515l-1.001 0.149-0.416-2.786 1.001-0.149zM20.457
-        20.974l-0.813 0.602-1.676-2.264 0.813-0.602zM22.35 17.95l-0.341
-        0.952-2.652-0.95 0.341-0.952zM19.055 16.043c0 1.678-1.36 3.038-3.038
-        3.038s-3.038-1.36-3.038-3.038c0-1.678 1.36-3.038 3.038-3.038s3.038 1.36
-        3.038 3.038z" />
-
-    </svg> -->
+      </svg>
+    </div>
 
     <div class="ground" />
 

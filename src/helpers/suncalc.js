@@ -154,7 +154,7 @@ function getSetJ(h, lw, phi, dec, n, M, L) {
 // calculates sun times for a given date, latitude/longitude, and, optionally,
 // the observer height (in meters) relative to the horizon
 
-sunCalc.getTimes = function(date, lat, lng, height) {
+/* sunCalc.getTimes = function(date, lat, lng, height) {
   height = height || 0;
 
   var lw = rad * -lng,
@@ -192,7 +192,7 @@ sunCalc.getTimes = function(date, lat, lng, height) {
 
   return result;
 };
-
+ */
 // moon calculations, based on http://aa.quae.nl/en/reken/hemelpositie.html formulas
 
 function moonCoords(d) {
