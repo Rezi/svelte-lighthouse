@@ -27,15 +27,26 @@
   let skyHalo;
 
   let scrollDate = new Date();
-  $: dateTime = scrollDate;
+  let scrollLeftGrouped = 0;
+  let dateTime = scrollDate;
 
   onMount(() => {
     fetchForecast("Hlavní město Praha");
   });
 
   function weatherScroll(event) {
+    const fromLeft = event.target.scrollLeft;
+    let animationKey = false;
+    // only trigger animation each 50px of scrolling, 50px transitions are made by css transitions
+    if (
+      fromLeft > scrollLeftGrouped + 50 ||
+      fromLeft < scrollLeftGrouped - 50
+    ) {
+      scrollLeftGrouped = fromLeft;
+      animationKey = true;
+    }
     window.requestAnimationFrame(() => {
-      countOnScrollFrame(event.target.scrollLeft);
+      countOnScrollFrame(fromLeft, animationKey);
     });
   }
 
@@ -44,11 +55,14 @@
     prevMoonPhase = sunCalc.getMoonIllumination(nearestForecastDate).phase;
   }
 
-  function animateMoon(date) {
+  function animateMoon(date, animationKey) {
     let moonPhase = sunCalc.getMoonIllumination(date).phase; // 0 - 1;
 
-    moonLeft = moonPhase < 0.5 ? 7.8 - moonPhase * 31.2 : -7.8;
-    moonRight = moonPhase >= 0.5 ? 7.8 - (moonPhase - 0.5) * 31.2 : 7.8;
+    if (animationKey) {
+      moonLeft = moonPhase < 0.5 ? 7.8 - moonPhase * 31.2 : -7.8;
+      moonRight = moonPhase >= 0.5 ? 7.8 - (moonPhase - 0.5) * 31.2 : 7.8;
+    }
+
     prevMoonPhase = moonPhase;
 
     const coords = dataSet.city.coord;
@@ -62,7 +76,7 @@
     moonRotationDeg = (moonPosition.parallacticAngle * 180) / Math.PI;
     // max = Pi/2 rad
   }
-  function animateSun(date) {
+  function animateSun(date, animationKey) {
     const coords = dataSet.city.coord;
     /*     const sunTimes = sunCalc.getTimes(date, coords.lat, coords.lon, 0);
     console.log(sunTimes); */
@@ -74,36 +88,41 @@
     sunLeftPosition = 10 + "vh";
   }
 
-  function colorSky(sunAngleDeg) {
+  function colorSky(sunAngleDeg, animationKey) {
     /*     sunDegAngle */
+    if (animationKey) {
+      let lightness = sunAngleDeg < -30 ? -30 : sunAngleDeg;
+      lightness += 30;
+      lightness = Math.pow(lightness, 0.8);
+      lightness += 15;
 
-    let lightness = sunAngleDeg < -30 ? -30 : sunAngleDeg;
-    lightness += 30;
-    lightness = Math.pow(lightness, 0.8);
-    lightness += 15;
+      const darkness = 1 - lightness / 100;
 
-    const darkness = 1 - lightness / 100;
+      const skyTopHslMax = 264;
+      const skyBottomHslMax = 283;
+      const skyTopHsl = skyTopHslMax - lightness * 1.5;
+      const skyBottomHsl = skyBottomHslMax - lightness * 1.5;
 
-    const skyTopHslMax = 264;
-    const skyBottomHslMax = 283;
-    const skyTopHsl = skyTopHslMax - lightness * 1.5;
-    const skyBottomHsl = skyBottomHslMax - lightness * 1.5;
-
-    skyTop = `hsl(${skyTopHsl}, 56%, ${lightness}%)`;
-    skyBottom = `hsl(${skyBottomHsl}, 39%, ${lightness}%)`;
-    skyHalo = `hsla(0, 0%, 0%, ${darkness})`;
+      skyTop = `hsl(${skyTopHsl}, 56%, ${lightness}%)`;
+      skyBottom = `hsl(${skyBottomHsl}, 39%, ${lightness}%)`;
+      skyHalo = `hsla(0, 0%, 0%, ${darkness})`;
+    }
   }
 
-  function countOnScrollFrame(scrollLeft) {
+  function countOnScrollFrame(scrollLeft, animationKey) {
     const threeHoursInMs = 3 * 60 * 60 * 1000;
     const onePxInMs = threeHoursInMs / elWeatherColumnWidth;
     scrollDate = new Date(
       nearestForecastDate.getTime() + onePxInMs * scrollLeft
     );
 
-    animateMoon(scrollDate);
-    animateSun(scrollDate);
-    colorSky(sunDegAngle);
+    if (animationKey) {
+      dateTime = scrollDate;
+    }
+
+    animateMoon(scrollDate, animationKey);
+    animateSun(scrollDate, animationKey);
+    colorSky(sunDegAngle, animationKey);
   }
 
   const fetchForecast = async city => {
@@ -115,7 +134,7 @@
     setDefaultValues(dataSet);
 
     // make initial render
-    countOnScrollFrame(0);
+    countOnScrollFrame(0, true);
   };
 </script>
 
@@ -136,6 +155,9 @@
     width: 0;
     height: 0;
     position: absolute;
+    bottom: 0;
+    left: 0;
+    //transition: all 0.5s;
 
     .sun-svg {
       width: $sunnWidth * 2.75;
@@ -150,6 +172,9 @@
     width: 0;
     height: 0;
     position: absolute;
+    bottom: 0;
+    left: 0;
+    //transition: all 0.5s;
 
     .moon-svg {
       width: $moonWidth * 2.75;
@@ -264,7 +289,7 @@
     </svg>
     <div
       class="moon"
-      style="bottom:{moonBottomPosition}; left:{moonLeftPosition}; transform:
+      style="transform:translate({moonLeftPosition},-{moonBottomPosition})
       rotate({moonRotationDeg}deg)">
       <div class="moon-bg" />
       <svg class="moon-svg" viewBox="0 0 32 32">
@@ -282,7 +307,9 @@
 
     </div>
 
-    <div class="sun" style="bottom:{sunBottomPosition}; left:{sunLeftPosition}">
+    <div
+      class="sun"
+      style="transform:translate({sunLeftPosition},-{sunBottomPosition})">
       <svg class="sun-svg" viewBox="0 0 32 32">
         <path
           class="glow-filter"
