@@ -193,10 +193,10 @@
     }
   }
 
-  .glow-filter {
+  /* .glow-filter {
     filter: url("#strokeGlow");
     -webkit-filter: url("#strokeGlow");
-  }
+  } */
 
   .weather-bg-radial {
     height: 100vh;
