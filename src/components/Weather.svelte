@@ -22,19 +22,38 @@
   let sunBottomPosition;
   let sunLeftPosition;
   let sunDegAngle;
+  let sunFromLeft;
 
-  let skyTop;
-  let skyBottom;
+  let groundTopHsl;
+  let groundBottomHsl;
+
+  let skyTopHsl;
+  let skyBottomHsl;
   let skyHalo;
 
   let scrollDate = new Date();
   let scrollLeftGrouped = 0;
   let dateTime = scrollDate;
+  let date;
+  let day;
   let isMobile;
+  let stars = [];
+  let starsOpacity0To1 = 0;
+
+  const days = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday"
+  ];
 
   onMount(() => {
     isMobile = isMobileDevice();
     fetchForecast("Hlavní město Praha");
+    generateStars();
   });
 
   function isMobileDevice() {
@@ -43,6 +62,18 @@
       typeof window.orientation !== "undefined" ||
       navigator.userAgent.indexOf("IEMobile") !== -1
     );
+  }
+
+  function generateStars() {
+    const tempStars = [];
+    for (let i = 0; i < 20; i++) {
+      tempStars.push(
+        `transform:scale(${Math.random()}) translate(${Math.random() *
+          100}vw, ${Math.random() * 85}vh)`
+      );
+    }
+
+    stars = [...tempStars];
   }
 
   function weatherScroll(event) {
@@ -82,24 +113,22 @@
     moonBottomPosition =
       (moonPosition.altitude * 100) / (Math.PI / 2) + 14 + "vh"; // 14 is extra for the bottom terrain
 
-    moonLeftPosition = 10 + "vh";
+    moonLeftPosition = (moonPosition.azimuth / Math.PI) * 50 + 50; // 0 - 100
 
     moonRotationDeg = (moonPosition.parallacticAngle * 180) / Math.PI;
     // max = Pi/2 rad
   }
   function animateSun(date, animationKey) {
     const coords = dataSet.city.coord;
-    /*     const sunTimes = sunCalc.getTimes(date, coords.lat, coords.lon, 0);
-    console.log(sunTimes); */
 
     const sunPosition = sunCalc.getPosition(date, coords.lat, coords.lon);
     sunDegAngle = (sunPosition.altitude * 100) / (Math.PI / 2);
     sunBottomPosition = sunDegAngle + 14 + "vh"; // 14 is extra for the bottom terrain
 
-    sunLeftPosition = 10 + "vh";
+    sunLeftPosition = (sunPosition.azimuth / Math.PI) * 50 + 50; // 0 - 100
   }
 
-  function colorSky(sunAngleDeg, animationKey) {
+  function colors(sunAngleDeg, animationKey) {
     const itemScrolled = Math.floor(fromLeft / elWeatherColumnWidth);
     const scrolledForecast = dataSet.list[itemScrolled];
     const cloudsInPercent = scrolledForecast.clouds.all;
@@ -114,18 +143,28 @@
     const lightnessTo16 = lightness / 6.25; // 0 - 16
     const lightnessExponential = Math.pow(lightnessTo16, 0.25); // 0-2;  1 => 1,  16 => 2
     const lightnessExponential8To60 = lightnessExponential * 26 + 8;
-    moonOpacity01To1 = (1 - lightnessExponential * 0.45).toFixed(2);
+    moonOpacity01To1 = 1 - lightnessExponential * 0.45;
+    starsOpacity0To1 = 1 - lightnessExponential - cloudsInPercent / 110;
 
     const darkness = 1 - lightness / 100;
 
-    const skyTopHslMax = 243;
-    const skyBottomHslMax = 223;
+    const groundTopHueMax = 38;
+    const groundBottomHueMax = 260;
+    const groundTopHue = groundTopHueMax + lightnessExponential8To60;
+    const groundBottomHue =
+      groundBottomHueMax - lightnessExponential8To60 * 1.5;
+    const groundLightness = Math.pow(lightnessExponential8To60, 0.85);
+    groundTopHsl = `hsl(${groundTopHue}, ${saturation +
+      20}%, ${groundLightness}%)`;
+    groundBottomHsl = `hsl(${groundBottomHue}, ${saturation +
+      20}%, ${groundLightness}%)`;
 
-    const skyTopHsl = skyTopHslMax - lightnessExponential8To60 * 0.8;
-    const skyBottomHsl = skyBottomHslMax - lightnessExponential8To60 * 0.8;
-
-    skyTop = `hsl(${skyTopHsl}, ${saturation}%, ${lightnessExponential8To60}%)`;
-    skyBottom = `hsl(${skyBottomHsl}, ${saturation}%, ${lightnessExponential8To60}%)`;
+    const skyTopHueMax = 243;
+    const skyBottomHueMax = 223;
+    const skyTopHue = skyTopHueMax - lightnessExponential8To60 * 0.8;
+    const skyBottomHue = skyBottomHueMax - lightnessExponential8To60 * 0.8;
+    skyTopHsl = `hsl(${skyTopHue}, ${saturation}%, ${lightnessExponential8To60}%)`;
+    skyBottomHsl = `hsl(${skyBottomHue}, ${saturation}%, ${lightnessExponential8To60}%)`;
     skyHalo = `hsla(0, 0%, 0%, ${darkness})`;
   }
 
@@ -140,9 +179,16 @@
     dateTime = scrollDate;
     // }
 
+    const newDay = days[scrollDate.getDay()];
+
+    if (day !== newDay) {
+      day = newDay;
+      date = scrollDate.toLocaleDateString();
+    }
+
     animateMoon(scrollDate, animationKey);
     animateSun(scrollDate, animationKey);
-    colorSky(sunDegAngle, animationKey);
+    colors(sunDegAngle, animationKey);
   }
 
   const fetchForecast = async city => {
@@ -159,24 +205,32 @@
 </script>
 
 <style type="text/scss">
+  $cardinalDirectionsShift: 1rem;
+
   .svg-def {
     position: absolute;
     width: 0;
     height: 0;
   }
-
-  .star {
-    width: 70px;
-    height: 70px;
-    fill: #cafbff;
+  .stars {
+    .star {
+      fill: #cafbff;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 3vh;
+      height: 3vh;
+    }
   }
+
   .sun {
-    $sunnWidth: 10vh;
+    $sunnWidth: 14vh;
     width: 0;
     height: 0;
     position: absolute;
     bottom: 0;
-    left: 0;
+    left: $cardinalDirectionsShift;
+
     //transition: all 0.5s;
 
     .sun-svg {
@@ -194,6 +248,7 @@
     position: absolute;
     bottom: 0;
     left: 0;
+    padding-left: $cardinalDirectionsShift;
     //transition: all 0.5s;
 
     .moon-svg {
@@ -227,24 +282,6 @@
     left: 0;
     width: 100vw;
     position: fixed;
-
-    .ground {
-      $size: 300vh;
-      position: absolute;
-      height: $size;
-      width: $size;
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: calc(#{-$size} + 20vh);
-      background: rgb(0, 47, 0);
-      background: radial-gradient(
-        circle closest-side,
-        rgba(42, 15, 95, 1) 85%,
-        #797858 100%
-      );
-
-      border-radius: 50%;
-    }
   }
 
   .weather-scroll {
@@ -256,14 +293,70 @@
 
   .weather-column {
     flex: 1 0 10rem;
+
+    .forecast {
+      font-size: 1.2rem;
+      position: relative;
+      top: calc(12vh + 5rem);
+      text-align: center;
+      color: wheat;
+    }
   }
   .date-time {
     position: absolute;
-    top: 10vh;
+    top: 6vh;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 1rem;
+    text-align: center;
     color: wheat;
+
+    .day {
+      font-size: 2rem;
+    }
+
+    .date {
+      font-size: 1rem;
+    }
+
+    .separator {
+      color: rgb(49, 49, 49);
+    }
+    .realtime {
+      padding-left: 0.3rem;
+      font-size: 2rem;
+    }
+  }
+
+  .ground {
+    $size: 300vh; // earth diameter
+    position: absolute;
+    height: $size;
+    width: $size;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: calc(#{-$size} + 20vh);
+    /*  background: rgb(0, 47, 0);
+    background: radial-gradient(
+      circle closest-side,
+      hsl(260, 73%, 22%) 85%,
+      hsl(58, 16%, 41%) 100%
+    ); */
+
+    border-radius: 50%;
+  }
+
+  .cardinal-directions {
+    position: absolute;
+    left: 0;
+    bottom: calc(1rem + 3vh);
+    display: flex;
+    width: 100%;
+    color: wheat;
+
+    .direction {
+      padding-left: $cardinalDirectionsShift;
+      width: 25vw;
+    }
   }
 </style>
 
@@ -291,25 +384,32 @@
 
 <div
   class="weather-bg weather-bg-linear"
-  style="background: linear-gradient( 0deg, {skyBottom} 0%, {skyTop} 100% );">
+  style="background: linear-gradient( 0deg, {skyBottomHsl} 0%, {skyTopHsl} 100%
+  );">
   <div
     class="weather-bg-radial"
-    style="background: radial-gradient( circle at 30% 40%, rgba(0, 0, 0, 0) 0%, {skyHalo}
+    style="background: radial-gradient( circle at 30% 75%, rgba(0, 0, 0, 0) 0%, {skyHalo}
     100% );">
 
-    <div class="date-time">{dateTime}</div>
+    <div class="stars" style="opacity:{starsOpacity0To1}">
+      {#each stars as starStyle}
+        <svg class="star" viewBox="0 0 32 32" style={starStyle}>
 
-    <svg class="star" viewBox="0 0 32 32">
-
-      <path
-        class:glow-filter={!isMobile}
-        d="M21.557 14.914l-3.635-0.528-1.625-3.293-1.625 3.293-3.635 0.528 2.63
-        2.564-0.621 3.62 3.251-1.709 3.251 1.709-0.621-3.62z" />
-
-    </svg>
+          <path
+            d="M21.557 14.914l-3.635-0.528-1.625-3.293-1.625 3.293-3.635 0.528
+            2.63 2.564-0.621 3.62 3.251-1.709 3.251 1.709-0.621-3.62z" />
+          <!-- 
+        <path
+          class:glow-filter={!isMobile}
+          d="M21.557 14.914l-3.635-0.528-1.625-3.293-1.625 3.293-3.635 0.528
+          2.63 2.564-0.621 3.62 3.251-1.709 3.251 1.709-0.621-3.62z" />
+ -->
+        </svg>
+      {/each}
+    </div>
     <div
       class="moon"
-      style="opacity:{moonOpacity01To1};transform:translate({moonLeftPosition},-{moonBottomPosition})
+      style="opacity:{moonOpacity01To1};transform:translate({moonLeftPosition}vw,-{moonBottomPosition})
       rotate({moonRotationDeg}deg)">
       <div class="moon-bg" />
       <svg class="moon-svg" viewBox="0 0 32 32">
@@ -329,27 +429,63 @@
 
     <div
       class="sun"
-      style="transform:translate({sunLeftPosition},-{sunBottomPosition})">
+      style="transform: translate({sunLeftPosition}vw,-{sunBottomPosition})
+      rotate({sunLeftPosition * -7}deg)">
       <svg class="sun-svg" viewBox="0 0 32 32">
         <path
           class:glow-filter={!isMobile}
-          d="M22.589 15.229l0.051 1.010-2.813 0.142-0.051-1.010zM21.312
-          12.035l0.525 0.865-2.408 1.463-0.525-0.865zM18.477 9.895l0.911
-          0.439-1.223 2.538-0.911-0.439zM15.059 9.479l1.010-0.051 0.142
-          2.813-1.010 0.051zM11.805 10.945l0.81-0.606 1.687 2.256-0.81
-          0.606zM9.807 13.712l0.439-0.911 2.538 1.223-0.439 0.911zM9.524
-          17.277l-0.149-1.001 2.786-0.416 0.149 1.001zM11 20.366l-0.602-0.813
-          2.264-1.676 0.602 0.813zM13.829 22.314l-0.915-0.432 1.204-2.547 0.915
-          0.432zM17.394 22.515l-1.001 0.149-0.416-2.786 1.001-0.149zM20.457
-          20.974l-0.813 0.602-1.676-2.264 0.813-0.602zM22.35 17.95l-0.341
-          0.952-2.652-0.95 0.341-0.952zM19.055 16.043c0 1.678-1.36 3.038-3.038
-          3.038s-3.038-1.36-3.038-3.038c0-1.678 1.36-3.038 3.038-3.038s3.038
-          1.36 3.038 3.038z" />
+          d="M13.795 18.232c0.217 0.24 0.271 0.542 0.121 0.678l-1.082 0.98c-0.15
+          0.136-0.445
+          0.052-0.662-0.188s-0.271-0.542-0.121-0.678l1.082-0.98c0.15-0.136
+          0.445-0.052 0.662 0.188zM15.992 19.217c0.323 0.016 0.575 0.191 0.565
+          0.393l-0.072 1.458c-0.010 0.202-0.278 0.352-0.601
+          0.336s-0.575-0.191-0.565-0.393l0.072-1.458c0.010-0.202 0.278-0.352
+          0.601-0.336zM18.248 18.379c0.24-0.217 0.542-0.271 0.678-0.121l0.98
+          1.082c0.136 0.15 0.052 0.445-0.188 0.663s-0.542 0.271-0.678
+          0.121l-0.98-1.082c-0.136-0.15-0.052-0.445 0.188-0.663zM19.269
+          16.199c0.016-0.323 0.191-0.575 0.393-0.565l1.458 0.072c0.202 0.010
+          0.352 0.278 0.336 0.601s-0.191 0.575-0.393
+          0.565l-1.458-0.072c-0.202-0.010-0.352-0.278-0.336-0.601zM18.462
+          13.922c-0.217-0.239-0.272-0.542-0.123-0.678l1.080-0.982c0.15-0.136
+          0.445-0.053 0.663 0.187s0.272 0.542 0.123 0.678l-1.080 0.982c-0.15
+          0.136-0.445 0.053-0.663-0.187zM16.309
+          12.873c-0.323-0.016-0.575-0.192-0.565-0.394l0.074-1.458c0.010-0.202
+          0.279-0.351 0.602-0.335s0.575 0.192 0.565 0.394l-0.074 1.458c-0.010
+          0.202-0.279 0.351-0.602 0.335zM14.014 13.643c-0.239 0.218-0.542
+          0.272-0.678 0.123l-0.982-1.080c-0.136-0.15-0.053-0.445
+          0.187-0.663s0.542-0.272 0.678-0.123l0.982 1.080c0.136 0.15 0.053
+          0.445-0.187 0.663zM12.93 15.779c-0.016 0.323-0.192 0.575-0.394
+          0.565l-1.458-0.074c-0.202-0.010-0.351-0.278-0.335-0.602s0.192-0.575
+          0.394-0.565l1.458 0.074c0.202 0.010 0.351 0.278 0.335 0.602zM18.141
+          16.042c0 0 0 0 0 0 0 1.129-0.915 2.045-2.045 2.045v0c-1.129
+          0-2.045-0.915-2.045-2.045 0 0 0 0 0 0v0c0-1.129 0.915-2.045
+          2.045-2.045v0c1.129 0 2.045 0.915 2.045 2.045v0z" />
 
       </svg>
     </div>
 
-    <div class="ground" />
+    <div class="date-time">
+      <div class="day">{day}</div>
+      <div class="date">
+        {date}
+        <span class="realtime">
+          <span class="separator">|</span>
+          {dateTime.toLocaleTimeString(undefined, { timeStyle: 'short' })}
+        </span>
+      </div>
+    </div>
+
+    <div
+      class="ground"
+      style="background: linear-gradient( 0deg, {groundBottomHsl} 89%, {groundTopHsl}
+      100% );" />
+
+    <div class="cardinal-directions">
+      <div class="direction">N</div>
+      <div class="direction">E</div>
+      <div class="direction">S</div>
+      <div class="direction">W</div>
+    </div>
 
   </div>
 </div>
@@ -357,9 +493,13 @@
 <div class="weather-scroll" on:scroll={weatherScroll}>
   {#each forecastMock.list as forecast}
     <div class="weather-column" bind:offsetWidth={elWeatherColumnWidth}>
-      {forecast.dt_txt}
-      <br />
-      {forecast.clouds.all}
+      <div class="forecast">
+        {new Date(forecast.dt * 1000).toLocaleTimeString(undefined, {
+          timeStyle: 'short'
+        })}
+        <!--   <br />
+        {forecast.clouds.all} -->
+      </div>
     </div>
   {/each}
 </div>
