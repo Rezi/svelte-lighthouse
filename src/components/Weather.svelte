@@ -204,12 +204,12 @@
   }
 
   const fetchForecast = async city => {
-    const urlWithCity = forecastUrl.replace("_city_", city);
+    /*   const urlWithCity = forecastUrl.replace("_city_", city);
     const response = await fetch(urlWithCity);
     dataSet = await response.json();
-    console.log(dataSet);
+    console.log(dataSet); */
 
-    // dataSet = forecastMock;
+    dataSet = forecastMock;
     setDefaultValues(dataSet);
 
     // make initial render
