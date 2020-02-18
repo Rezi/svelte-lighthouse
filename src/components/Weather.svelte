@@ -2,6 +2,7 @@
   import { sunCalc } from "../helpers/suncalc";
   import { forecastMock } from "../helpers/mock";
   import { onMount } from "svelte";
+  import Cloud from "../components/Cloud.svelte";
 
   const forecastUrl =
     "http://api.openweathermap.org/data/2.5/forecast?q=_city_&APPID=a77e1d2fcad267b4ba535bd5fd05b6e7";
@@ -10,6 +11,8 @@
   let moonRight = 0;
   let fromLeft = 0;
   let elWeatherColumnWidth;
+  let elWeatherColumnHeight;
+  let elWeatherColumns;
   let dataSet;
   let prevMoonPhase;
   let nearestForecastDate;
@@ -40,6 +43,8 @@
   let stars = [];
   let starsOpacity0To1 = 0;
 
+  let baseCloudBall = 70;
+
   const days = [
     "Sunday",
     "Monday",
@@ -51,6 +56,10 @@
   ];
 
   onMount(() => {
+    const secondColumn = elWeatherColumns.childNodes[2];
+    elWeatherColumnWidth = secondColumn.clientWidth;
+    elWeatherColumnHeight = secondColumn.clientHeight;
+
     isMobile = isMobileDevice();
     fetchForecast("Hlavní město Praha");
     generateStars();
@@ -131,41 +140,44 @@
   function colors(sunAngleDeg, animationKey) {
     const itemScrolled = Math.floor(fromLeft / elWeatherColumnWidth);
     const scrolledForecast = dataSet.list[itemScrolled];
-    const cloudsInPercent = scrolledForecast.clouds.all;
+    if (scrolledForecast) {
+      const cloudsInPercent =
+        (scrolledForecast.clouds && scrolledForecast.clouds.all) || 0;
 
-    const saturation = 20 + (100 - cloudsInPercent) * 0.5; // saturation 20 - 70% depending on clouds
-    // const saturation = 100; // saturation 20 - 70% depending on clouds
+      const saturation = 20 + (100 - cloudsInPercent) * 0.5; // saturation 20 - 70% depending on clouds
+      // const saturation = 100; // saturation 20 - 70% depending on clouds
 
-    let lightness = sunAngleDeg < -5 ? -5 : sunAngleDeg; // start 5deg below horizon
-    lightness += 5; // ensure we start with lightness of at least 0
-    lightness = lightness > 100 ? 100 : lightness; // 0 - 100
+      let lightness = sunAngleDeg < -5 ? -5 : sunAngleDeg; // start 5deg below horizon
+      lightness += 5; // ensure we start with lightness of at least 0
+      lightness = lightness > 100 ? 100 : lightness; // 0 - 100
 
-    const lightnessTo16 = lightness / 6.25; // 0 - 16
-    const lightnessExponential = Math.pow(lightnessTo16, 0.25); // 0-2;  1 => 1,  16 => 2
-    const lightnessExponential8To60 = lightnessExponential * 26 + 8;
-    moonOpacity01To1 = 1 - lightnessExponential * 0.45;
-    starsOpacity0To1 = 1 - lightnessExponential - cloudsInPercent / 110;
+      const lightnessTo16 = lightness / 6.25; // 0 - 16
+      const lightnessExponential = Math.pow(lightnessTo16, 0.25); // 0-2;  1 => 1,  16 => 2
+      const lightnessExponential8To60 = lightnessExponential * 26 + 8;
+      moonOpacity01To1 = 1 - lightnessExponential * 0.45;
+      starsOpacity0To1 = 1 - lightnessExponential - cloudsInPercent / 105;
 
-    const darkness = 1 - lightness / 100;
+      const darkness = 1 - lightness / 100;
 
-    const groundTopHueMax = 38;
-    const groundBottomHueMax = 260;
-    const groundTopHue = groundTopHueMax + lightnessExponential8To60;
-    const groundBottomHue =
-      groundBottomHueMax - lightnessExponential8To60 * 1.5;
-    const groundLightness = Math.pow(lightnessExponential8To60, 0.85);
-    groundTopHsl = `hsl(${groundTopHue}, ${saturation +
-      20}%, ${groundLightness}%)`;
-    groundBottomHsl = `hsl(${groundBottomHue}, ${saturation +
-      20}%, ${groundLightness}%)`;
+      const groundTopHueMax = 38;
+      const groundBottomHueMax = 260;
+      const groundTopHue = groundTopHueMax + lightnessExponential8To60;
+      const groundBottomHue =
+        groundBottomHueMax - lightnessExponential8To60 * 1.5;
+      const groundLightness = Math.pow(lightnessExponential8To60, 0.85);
+      groundTopHsl = `hsl(${groundTopHue}, ${saturation +
+        20}%, ${groundLightness}%)`;
+      groundBottomHsl = `hsl(${groundBottomHue}, ${saturation +
+        20}%, ${groundLightness}%)`;
 
-    const skyTopHueMax = 243;
-    const skyBottomHueMax = 223;
-    const skyTopHue = skyTopHueMax - lightnessExponential8To60 * 0.8;
-    const skyBottomHue = skyBottomHueMax - lightnessExponential8To60 * 0.8;
-    skyTopHsl = `hsl(${skyTopHue}, ${saturation}%, ${lightnessExponential8To60}%)`;
-    skyBottomHsl = `hsl(${skyBottomHue}, ${saturation}%, ${lightnessExponential8To60}%)`;
-    skyHalo = `hsla(0, 0%, 0%, ${darkness})`;
+      const skyTopHueMax = 243;
+      const skyBottomHueMax = 223;
+      const skyTopHue = skyTopHueMax - lightnessExponential8To60 * 0.8;
+      const skyBottomHue = skyBottomHueMax - lightnessExponential8To60 * 0.8;
+      skyTopHsl = `hsl(${skyTopHue}, ${saturation}%, ${lightnessExponential8To60}%)`;
+      skyBottomHsl = `hsl(${skyBottomHue}, ${saturation}%, ${lightnessExponential8To60}%)`;
+      skyHalo = `hsla(0, 0%, 0%, ${darkness})`;
+    }
   }
 
   function countOnScrollFrame(scrollLeft, animationKey) {
@@ -192,11 +204,12 @@
   }
 
   const fetchForecast = async city => {
-    /*  const urlWithCity = forecastUrl.replace("_city_", city);
+    const urlWithCity = forecastUrl.replace("_city_", city);
     const response = await fetch(urlWithCity);
-    const data = await response.json(); */
+    dataSet = await response.json();
+    console.log(dataSet);
 
-    dataSet = forecastMock;
+    // dataSet = forecastMock;
     setDefaultValues(dataSet);
 
     // make initial render
@@ -358,6 +371,10 @@
       width: 25vw;
     }
   }
+
+  .cloud {
+    position: absolute;
+  }
 </style>
 
 <svg class="svg-def">
@@ -490,15 +507,27 @@
   </div>
 </div>
 
-<div class="weather-scroll" on:scroll={weatherScroll}>
+<div
+  class="weather-scroll"
+  on:scroll={weatherScroll}
+  bind:this={elWeatherColumns}>
   {#each forecastMock.list as forecast}
-    <div class="weather-column" bind:offsetWidth={elWeatherColumnWidth}>
+    <div class="weather-column">
       <div class="forecast">
         {new Date(forecast.dt * 1000).toLocaleTimeString(undefined, {
           timeStyle: 'short'
         })}
-        <!--   <br />
-        {forecast.clouds.all} -->
+        <div class="cloud" style="left:-{baseCloudBall}px">
+
+          <Cloud
+            columnWidth={elWeatherColumnWidth}
+            columnHeight={elWeatherColumnHeight}
+            baseCloudBall={(elWeatherColumnHeight * Math.pow(forecast.clouds.all, 0.5)) / 100}
+            clouds={forecast.clouds.all}
+            rain={(forecast.rain && forecast.rain['3h']) || 0}
+            snow={(forecast.snow && forecast.snow['3h']) || 0} />
+        </div>
+
       </div>
     </div>
   {/each}
