@@ -522,7 +522,7 @@
           <Cloud
             columnWidth={elWeatherColumnWidth}
             columnHeight={elWeatherColumnHeight}
-            baseCloudBall={(elWeatherColumnHeight * Math.pow(forecast.clouds.all, 0.5)) / 100}
+            baseCloudBall={(elWeatherColumnHeight * Math.pow(forecast.clouds.all, 0.65)) / 100}
             clouds={forecast.clouds.all}
             rain={(forecast.rain && forecast.rain['3h']) || 0}
             snow={(forecast.snow && forecast.snow['3h']) || 0} />
