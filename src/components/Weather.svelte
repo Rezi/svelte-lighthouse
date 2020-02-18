@@ -5,7 +5,7 @@
   import Cloud from "../components/Cloud.svelte";
 
   const forecastUrl =
-    "http://api.openweathermap.org/data/2.5/forecast?q=_city_&APPID=a77e1d2fcad267b4ba535bd5fd05b6e7";
+    "https://api.openweathermap.org/data/2.5/forecast?q=_city_&APPID=a77e1d2fcad267b4ba535bd5fd05b6e7";
 
   let moonLeft = 0;
   let moonRight = 0;
@@ -204,12 +204,12 @@
   }
 
   const fetchForecast = async city => {
-    /*   const urlWithCity = forecastUrl.replace("_city_", city);
+    const urlWithCity = forecastUrl.replace("_city_", city);
     const response = await fetch(urlWithCity);
     dataSet = await response.json();
-    console.log(dataSet); */
+    console.log(dataSet);
 
-    dataSet = forecastMock;
+    // dataSet = forecastMock;
     setDefaultValues(dataSet);
 
     // make initial render
