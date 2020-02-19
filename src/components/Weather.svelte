@@ -56,13 +56,23 @@
   ];
 
   onMount(() => {
-    const secondColumn = elWeatherColumns.childNodes[0].childNodes[2];
-    elWeatherColumnWidth = secondColumn.clientWidth;
-    elWeatherColumnHeight = secondColumn.clientHeight;
-
     isMobile = isMobileDevice();
-    fetchForecast("Hlavní město Praha");
-    generateStars();
+    fetchForecast("Hlavní město Praha").then(data => {
+      // dataSet = forecastMock;
+      dataSet = data;
+
+      setTimeout(() => {
+        const secondColumn = elWeatherColumns.childNodes[0].childNodes[2];
+        elWeatherColumnWidth = secondColumn.clientWidth;
+        elWeatherColumnHeight = secondColumn.clientHeight;
+
+        setDefaultValues(data);
+
+        // make initial render
+        countOnScrollFrame(0, true);
+        generateStars();
+      });
+    });
   });
 
   function isMobileDevice() {
@@ -204,16 +214,13 @@
   }
 
   const fetchForecast = async city => {
-    const urlWithCity = forecastUrl.replace("_city_", city);
+    /*    const urlWithCity = forecastUrl.replace("_city_", city);
     const response = await fetch(urlWithCity);
-    dataSet = await response.json();
-    console.log(dataSet);
+    const data = await response.json(); */
+    const data = forecastMock;
+    console.log(data);
 
-    // dataSet = forecastMock;
-    setDefaultValues(dataSet);
-
-    // make initial render
-    countOnScrollFrame(0, true);
+    return data;
   };
 </script>
 
@@ -516,26 +523,29 @@
   class="weather-scroll"
   on:scroll={weatherScroll}
   bind:this={elWeatherColumns}>
-  <div class="weather-columns-wrap">
-    {#each forecastMock.list as forecast}
-      <div class="weather-column">
-        <div class="forecast">
-          {new Date(forecast.dt * 1000).toLocaleTimeString(undefined, {
-            timeStyle: 'short'
-          })}
-          <div class="cloud" style="left:-{baseCloudBall}px">
+  {#if !!dataSet}
+    <div class="weather-columns-wrap">
+      {#each dataSet.list as forecast, index}
+        <div class="weather-column">
+          <div class="forecast">
+            {new Date(forecast.dt * 1000).toLocaleTimeString(undefined, {
+              timeStyle: 'short'
+            })}
+            <div class="cloud" style="left:-{baseCloudBall}px">
 
-            <Cloud
-              columnWidth={elWeatherColumnWidth}
-              columnHeight={elWeatherColumnHeight}
-              baseCloudBall={(elWeatherColumnHeight * Math.pow(forecast.clouds.all, 0.65)) / 100}
-              clouds={forecast.clouds.all}
-              rain={(forecast.rain && forecast.rain['3h']) || 0}
-              snow={(forecast.snow && forecast.snow['3h']) || 0} />
+              <Cloud
+                columnWidth={elWeatherColumnWidth}
+                columnHeight={elWeatherColumnHeight}
+                baseCloudBall={(elWeatherColumnHeight * Math.pow(forecast.clouds.all, 0.65)) / 100}
+                clouds={forecast.clouds.all}
+                rain={(forecast.rain && forecast.rain['3h']) || 0}
+                snow={(forecast.snow && forecast.snow['3h']) || 0} />
+
+            </div>
+
           </div>
-
         </div>
-      </div>
-    {/each}
-  </div>
+      {/each}
+    </div>
+  {/if}
 </div>
