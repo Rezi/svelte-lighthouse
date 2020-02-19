@@ -115,4 +115,4 @@
   }
 </script>
 
-<canvas class="canvas" bind:this={canvas} width="600" height="800" />
+<canvas class="canvas" bind:this={canvas} width="800" height="800" />

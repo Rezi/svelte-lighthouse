@@ -16,6 +16,8 @@
   let dataSet;
   let prevMoonPhase;
   let nearestForecastDate;
+  let fakeColumnBefore = 0;
+  let fakeColumnAfter = 0;
 
   let moonBottomPosition;
   let moonLeftPosition;
@@ -207,7 +209,6 @@
     const urlWithCity = forecastUrl.replace("_city_", city);
     const response = await fetch(urlWithCity);
     dataSet = await response.json();
-    console.log(dataSet);
 
     // dataSet = forecastMock;
     setDefaultValues(dataSet);
@@ -511,13 +512,14 @@
   class="weather-scroll"
   on:scroll={weatherScroll}
   bind:this={elWeatherColumns}>
+  <div class="column-gap" style="width:{fakeColumnBefore}px" />
   {#each forecastMock.list as forecast}
     <div class="weather-column">
       <div class="forecast">
         {new Date(forecast.dt * 1000).toLocaleTimeString(undefined, {
           timeStyle: 'short'
         })}
-        <div class="cloud" style="left:-{baseCloudBall}px">
+        <div class="cloud" style="left:-{baseCloudBall / 2}px">
 
           <Cloud
             columnWidth={elWeatherColumnWidth}
@@ -531,4 +533,5 @@
       </div>
     </div>
   {/each}
+  <div class="column-gap" style="width:{fakeColumnAfter}px" />
 </div>
