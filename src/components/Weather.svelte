@@ -56,7 +56,7 @@
   ];
 
   onMount(() => {
-    const secondColumn = elWeatherColumns.childNodes[2];
+    const secondColumn = elWeatherColumns.childNodes[0].childNodes[2];
     elWeatherColumnWidth = secondColumn.clientWidth;
     elWeatherColumnHeight = secondColumn.clientHeight;
 
@@ -298,12 +298,16 @@
   }
 
   .weather-scroll {
-    display: flex;
     overflow-y: hidden;
+  }
+
+  .weather-columns-wrap {
+    width: 400rem;
+    overflow: hidden;
+    display: flex;
     height: 100vh;
     position: relative;
   }
-
   .weather-column {
     flex: 1 0 10rem;
 
@@ -322,6 +326,7 @@
     transform: translateX(-50%);
     text-align: center;
     color: wheat;
+    width: 100%;
 
     .day {
       font-size: 2rem;
@@ -511,24 +516,26 @@
   class="weather-scroll"
   on:scroll={weatherScroll}
   bind:this={elWeatherColumns}>
-  {#each forecastMock.list as forecast}
-    <div class="weather-column">
-      <div class="forecast">
-        {new Date(forecast.dt * 1000).toLocaleTimeString(undefined, {
-          timeStyle: 'short'
-        })}
-        <div class="cloud" style="left:-{baseCloudBall}px">
+  <div class="weather-columns-wrap">
+    {#each forecastMock.list as forecast}
+      <div class="weather-column">
+        <div class="forecast">
+          {new Date(forecast.dt * 1000).toLocaleTimeString(undefined, {
+            timeStyle: 'short'
+          })}
+          <div class="cloud" style="left:-{baseCloudBall}px">
 
-          <Cloud
-            columnWidth={elWeatherColumnWidth}
-            columnHeight={elWeatherColumnHeight}
-            baseCloudBall={(elWeatherColumnHeight * Math.pow(forecast.clouds.all, 0.65)) / 100}
-            clouds={forecast.clouds.all}
-            rain={(forecast.rain && forecast.rain['3h']) || 0}
-            snow={(forecast.snow && forecast.snow['3h']) || 0} />
+            <Cloud
+              columnWidth={elWeatherColumnWidth}
+              columnHeight={elWeatherColumnHeight}
+              baseCloudBall={(elWeatherColumnHeight * Math.pow(forecast.clouds.all, 0.65)) / 100}
+              clouds={forecast.clouds.all}
+              rain={(forecast.rain && forecast.rain['3h']) || 0}
+              snow={(forecast.snow && forecast.snow['3h']) || 0} />
+          </div>
+
         </div>
-
       </div>
-    </div>
-  {/each}
+    {/each}
+  </div>
 </div>
