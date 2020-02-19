@@ -1,4 +1,6 @@
 <script>
+  import { onMount } from "svelte";
+
   export let columnWidth;
   export let columnHeight;
   export let baseCloudBall;
@@ -8,12 +10,12 @@
 
   let canvas;
 
-  $: if (columnWidth) {
+  onMount(() => {
     init();
-  }
+  });
 
   function init() {
-    const cloudWidth = columnWidth + baseCloudBall * 2;
+    const cloudWidth = columnWidth + baseCloudBall;
     const maxCloudHeight = columnHeight / 3;
 
     const cloudHeight = (maxCloudHeight * clouds) / 100;
@@ -59,7 +61,7 @@
 
       const positionBottom = height - level * cloudLevelGap;
 
-      levelWidth = levelWidth + (Math.random() - 0.7) * baseCloudBall * 2;
+      levelWidth = levelWidth + (Math.random() - 0.5) * baseCloudBall * 2;
       if (levelWidth > width) {
         levelWidth = width;
       }

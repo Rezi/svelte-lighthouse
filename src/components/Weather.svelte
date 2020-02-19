@@ -2,22 +2,27 @@
   import { sunCalc } from "../helpers/suncalc";
   import { forecastMock } from "../helpers/mock";
   import { onMount } from "svelte";
-  import Cloud from "../components/Cloud.svelte";
+  /*   import Cloud from "../components/Cloud.svelte"; */
+  import { generateCloud } from "../helpers/cloud-generator";
+  import { memoize } from "../helpers/helpers";
 
   const forecastUrl =
     "https://api.openweathermap.org/data/2.5/forecast?q=_city_&APPID=a77e1d2fcad267b4ba535bd5fd05b6e7";
 
   let moonLeft = 0;
   let moonRight = 0;
-  let fromLeft = 0;
-  let elWeatherColumnWidth;
-  let elWeatherColumnHeight;
-  let elWeatherColumns;
-  let dataSet;
+
+  let canvas;
+  let cloudDataURIs = [];
+  let columnsRemovedFromBeginning = 0;
+
+  let windowWidth;
+  let windowHeight;
+
   let prevMoonPhase;
   let nearestForecastDate;
-  let fakeColumnBefore = 0;
-  let fakeColumnAfter = 0;
+  let columnBeforePadding = 0;
+  let columnAfterPadding = 0;
 
   let moonBottomPosition;
   let moonLeftPosition;
@@ -37,6 +42,7 @@
   let skyHalo;
 
   let scrollDate = new Date();
+  let scrollList = [];
   let scrollLeftGrouped = 0;
   let dateTime = scrollDate;
   let date;
@@ -45,7 +51,9 @@
   let stars = [];
   let starsOpacity0To1 = 0;
 
-  let baseCloudBall = 70;
+  const locals = { scrollFromLeft: 0, dataSet: null };
+  const columnWidth = 160;
+  const memoizedCloudGenerator = memoize(generateCloud);
 
   const days = [
     "Sunday",
@@ -58,17 +66,24 @@
   ];
 
   onMount(() => {
-    const secondColumn = elWeatherColumns.childNodes[2];
-    elWeatherColumnWidth = secondColumn.clientWidth;
-    elWeatherColumnHeight = secondColumn.clientHeight;
-
     isMobile = isMobileDevice();
-    fetchForecast("Hlavní město Praha");
-    generateStars();
+    fetchForecast("Hlavní město Praha").then(data => {
+      // locals.dataSet = forecastMock;
+      locals.dataSet = data;
+      locals.columnsPerScreen = Math.ceil(windowWidth / columnWidth);
+
+      scrollList = locals.dataSet.list.slice(0, locals.columnsPerScreen + 1); // add just three column to the list so we can measure the width of it
+
+      setDefaultValues(data);
+
+      // make initial render
+      countOnScrollFrame(0, true);
+      generateStars();
+    });
   });
 
   function isMobileDevice() {
-    return false;
+    // return false;
     return (
       typeof window.orientation !== "undefined" ||
       navigator.userAgent.indexOf("IEMobile") !== -1
@@ -88,18 +103,19 @@
   }
 
   function weatherScroll(event) {
-    fromLeft = event.target.scrollLeft;
+    locals.scrollFromLeft = event.target.scrollLeft;
+
     let animationKey = false;
     // only trigger animation each 50px of scrolling, 50px transitions are made by css transitions
     if (
-      fromLeft > scrollLeftGrouped + 50 ||
-      fromLeft < scrollLeftGrouped - 50
+      locals.scrollFromLeft > scrollLeftGrouped + 50 ||
+      locals.scrollFromLeft < scrollLeftGrouped - 50
     ) {
-      scrollLeftGrouped = fromLeft;
+      scrollLeftGrouped = locals.scrollFromLeft;
       animationKey = true;
     }
     window.requestAnimationFrame(() => {
-      countOnScrollFrame(fromLeft, animationKey);
+      countOnScrollFrame(locals.scrollFromLeft, animationKey);
     });
   }
 
@@ -118,7 +134,7 @@
 
     prevMoonPhase = moonPhase;
 
-    const coords = dataSet.city.coord;
+    const coords = locals.dataSet.city.coord;
     const moonPosition = sunCalc.getMoonPosition(date, coords.lat, coords.lon);
 
     moonBottomPosition =
@@ -130,7 +146,7 @@
     // max = Pi/2 rad
   }
   function animateSun(date, animationKey) {
-    const coords = dataSet.city.coord;
+    const coords = locals.dataSet.city.coord;
 
     const sunPosition = sunCalc.getPosition(date, coords.lat, coords.lon);
     sunDegAngle = (sunPosition.altitude * 100) / (Math.PI / 2);
@@ -140,8 +156,8 @@
   }
 
   function colors(sunAngleDeg, animationKey) {
-    const itemScrolled = Math.floor(fromLeft / elWeatherColumnWidth);
-    const scrolledForecast = dataSet.list[itemScrolled];
+    const itemScrolled = Math.floor(locals.scrollFromLeft / columnWidth);
+    const scrolledForecast = locals.dataSet.list[itemScrolled];
     if (scrolledForecast) {
       const cloudsInPercent =
         (scrolledForecast.clouds && scrolledForecast.clouds.all) || 0;
@@ -183,8 +199,44 @@
   }
 
   function countOnScrollFrame(scrollLeft, animationKey) {
+    const noOfColumnsActive = locals.columnsPerScreen + 1;
+    columnsRemovedFromBeginning = Math.floor(scrollLeft / columnWidth);
+    columnBeforePadding = scrollLeft - (scrollLeft % columnWidth);
+    columnAfterPadding =
+      40 * columnWidth -
+      (noOfColumnsActive + columnsRemovedFromBeginning) * columnWidth;
+
+    let sliceEnd = noOfColumnsActive + columnsRemovedFromBeginning;
+    if (sliceEnd > 41) {
+      sliceEnd = 41;
+    }
+    scrollList = locals.dataSet.list.slice(
+      columnsRemovedFromBeginning,
+      sliceEnd
+    );
+
+    for (let i = columnsRemovedFromBeginning; i < sliceEnd; i++) {
+      const forecast = locals.dataSet.list[i];
+      const baseCloudBall =
+        (windowHeight * Math.pow(forecast.clouds.all || 0, 0.6)) / 100;
+
+      cloudDataURIs[i] = {
+        baseCloudBall,
+        img: memoizedCloudGenerator(
+          i,
+          canvas,
+          columnWidth,
+          windowHeight,
+          baseCloudBall,
+          forecast.clouds.all,
+          (forecast.rain && forecast.rain["3h"]) || 0,
+          (forecast.snow && forecast.snow["3h"]) || 0
+        )
+      };
+    }
+
     const threeHoursInMs = 3 * 60 * 60 * 1000;
-    const onePxInMs = threeHoursInMs / elWeatherColumnWidth;
+    const onePxInMs = threeHoursInMs / columnWidth;
     scrollDate = new Date(
       nearestForecastDate.getTime() + onePxInMs * scrollLeft
     );
@@ -208,13 +260,10 @@
   const fetchForecast = async city => {
     const urlWithCity = forecastUrl.replace("_city_", city);
     const response = await fetch(urlWithCity);
-    dataSet = await response.json();
+    const data = await response.json();
+    // const data = forecastMock;
 
-    // dataSet = forecastMock;
-    setDefaultValues(dataSet);
-
-    // make initial render
-    countOnScrollFrame(0, true);
+    return data;
   };
 </script>
 
@@ -299,14 +348,21 @@
   }
 
   .weather-scroll {
-    display: flex;
+    overflow-x: scroll;
     overflow-y: hidden;
     height: 100vh;
+    width: 100%;
     position: relative;
   }
 
+  .weather-columns-wrap {
+    overflow: hidden;
+    display: flex;
+    height: 96vh;
+    position: relative;
+  }
   .weather-column {
-    flex: 1 0 10rem;
+    flex: 1 0 160px;
 
     .forecast {
       font-size: 1.2rem;
@@ -323,6 +379,7 @@
     transform: translateX(-50%);
     text-align: center;
     color: wheat;
+    width: 100%;
 
     .day {
       font-size: 2rem;
@@ -376,7 +433,13 @@
   .cloud {
     position: absolute;
   }
+
+  .canvas {
+    display: none;
+  }
 </style>
+
+<svelte:window bind:outerWidth={windowWidth} bind:outerHeight={windowHeight} />
 
 <svg class="svg-def">
   <defs>
@@ -508,30 +571,37 @@
   </div>
 </div>
 
-<div
-  class="weather-scroll"
-  on:scroll={weatherScroll}
-  bind:this={elWeatherColumns}>
-  <div class="column-gap" style="width:{fakeColumnBefore}px" />
-  {#each forecastMock.list as forecast}
-    <div class="weather-column">
-      <div class="forecast">
-        {new Date(forecast.dt * 1000).toLocaleTimeString(undefined, {
-          timeStyle: 'short'
-        })}
-        <div class="cloud" style="left:-{baseCloudBall / 2}px">
+<div class="weather-scroll" on:scroll={weatherScroll}>
 
-          <Cloud
-            columnWidth={elWeatherColumnWidth}
-            columnHeight={elWeatherColumnHeight}
-            baseCloudBall={(elWeatherColumnHeight * Math.pow(forecast.clouds.all, 0.65)) / 100}
-            clouds={forecast.clouds.all}
-            rain={(forecast.rain && forecast.rain['3h']) || 0}
-            snow={(forecast.snow && forecast.snow['3h']) || 0} />
+  {#if scrollList.length}
+    <div
+      class="weather-columns-wrap"
+      style="width:{scrollList.length * columnWidth}px;padding-left:{columnBeforePadding}px;padding-right:{columnAfterPadding}px">
+
+      {#each scrollList as forecast, index}
+        <div class="weather-column">
+          <div class="forecast">
+            {new Date(forecast.dt * 1000).toLocaleTimeString(undefined, {
+              timeStyle: 'short'
+            })}
+            <br />
+            {forecast.clouds.all}
+            <div
+              class="cloud"
+              style="left:-{cloudDataURIs[columnsRemovedFromBeginning + index].baseCloudBall}px">
+
+              <img
+                src={cloudDataURIs[columnsRemovedFromBeginning + index].img}
+                alt="cloud" />
+
+            </div>
+
+          </div>
         </div>
+      {/each}
 
-      </div>
     </div>
-  {/each}
-  <div class="column-gap" style="width:{fakeColumnAfter}px" />
+  {/if}
 </div>
+
+<canvas class="canvas" bind:this={canvas} width="800" height="800" />
