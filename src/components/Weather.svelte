@@ -4,7 +4,8 @@
   import { onMount } from "svelte";
   /*   import Cloud from "../components/Cloud.svelte"; */
   import { generateCloud } from "../helpers/cloud-generator";
-  import { memoize } from "../helpers/helpers";
+  import { memoize, isMobileDevice } from "../helpers/helpers";
+  import ForecastStats from "./Forecast-stats.svelte";
 
   const forecastUrl =
     "https://api.openweathermap.org/data/2.5/forecast?q=_city_&APPID=a77e1d2fcad267b4ba535bd5fd05b6e7";
@@ -21,8 +22,9 @@
 
   let prevMoonPhase;
   let nearestForecastDate;
-  let columnBeforePadding = 0;
-  let columnAfterPadding = 0;
+  let beforePadding = 0;
+  let afterPadding = 0;
+  let activeForecast;
 
   let moonBottomPosition;
   let moonLeftPosition;
@@ -36,6 +38,7 @@
 
   let groundTopHsl;
   let groundBottomHsl;
+  let cloudBrightness;
 
   let skyTopHsl;
   let skyBottomHsl;
@@ -47,12 +50,17 @@
   let dateTime = scrollDate;
   let date;
   let day;
-  let isMobile;
+
   let stars = [];
   let starsOpacity0To1 = 0;
 
-  const locals = { scrollFromLeft: 0, dataSet: null };
-  const columnWidth = 160;
+  const locals = {
+    scrollFromLeft: 0,
+    dataSet: null,
+    isMobile: false,
+    columnWidth: 160
+  };
+
   const memoizedCloudGenerator = memoize(generateCloud);
 
   const days = [
@@ -66,13 +74,13 @@
   ];
 
   onMount(() => {
-    isMobile = isMobileDevice();
+    locals.isMobile = isMobileDevice();
     fetchForecast("Hlavní město Praha").then(data => {
       // locals.dataSet = forecastMock;
       locals.dataSet = data;
-      locals.columnsPerScreen = Math.ceil(windowWidth / columnWidth);
+      activeForecast = locals.dataSet.list[0];
 
-      scrollList = locals.dataSet.list.slice(0, locals.columnsPerScreen + 1); // add just three column to the list so we can measure the width of it
+      scrollList = []; // add just three column to the list so we can measure the width of it
 
       setDefaultValues(data);
 
@@ -81,14 +89,6 @@
       generateStars();
     });
   });
-
-  function isMobileDevice() {
-    // return false;
-    return (
-      typeof window.orientation !== "undefined" ||
-      navigator.userAgent.indexOf("IEMobile") !== -1
-    );
-  }
 
   function generateStars() {
     const tempStars = [];
@@ -120,7 +120,7 @@
   }
 
   function setDefaultValues(data) {
-    nearestForecastDate = new Date(data.list[0].dt_txt);
+    nearestForecastDate = new Date(data.list[0].dt * 1000);
     prevMoonPhase = sunCalc.getMoonIllumination(nearestForecastDate).phase;
   }
 
@@ -156,7 +156,7 @@
   }
 
   function colors(sunAngleDeg, animationKey) {
-    const itemScrolled = Math.floor(locals.scrollFromLeft / columnWidth);
+    const itemScrolled = Math.floor(locals.scrollFromLeft / locals.columnWidth);
     const scrolledForecast = locals.dataSet.list[itemScrolled];
     if (scrolledForecast) {
       const cloudsInPercent =
@@ -173,7 +173,9 @@
       const lightnessExponential = Math.pow(lightnessTo16, 0.25); // 0-2;  1 => 1,  16 => 2
       const lightnessExponential8To60 = lightnessExponential * 26 + 8;
       moonOpacity01To1 = 1 - lightnessExponential * 0.45;
-      starsOpacity0To1 = 1 - lightnessExponential - cloudsInPercent / 105;
+      starsOpacity0To1 = 1 - lightnessExponential - cloudsInPercent / 100;
+
+      cloudBrightness = lightnessExponential / 2.06 + 0.12;
 
       const darkness = 1 - lightness / 100;
 
@@ -199,23 +201,61 @@
   }
 
   function countOnScrollFrame(scrollLeft, animationKey) {
-    const noOfColumnsActive = locals.columnsPerScreen + 1;
-    columnsRemovedFromBeginning = Math.floor(scrollLeft / columnWidth);
-    columnBeforePadding = scrollLeft - (scrollLeft % columnWidth);
-    columnAfterPadding =
-      40 * columnWidth -
-      (noOfColumnsActive + columnsRemovedFromBeginning) * columnWidth;
+    const numberOfItems = locals.dataSet.list.length;
 
-    let sliceEnd = noOfColumnsActive + columnsRemovedFromBeginning;
-    if (sliceEnd > 41) {
-      sliceEnd = 41;
+    const defaultSidePadding = windowWidth / 2 - locals.columnWidth / 2;
+    let leftEdgeScrolled =
+      scrollLeft - defaultSidePadding < 0 ? 0 : scrollLeft - defaultSidePadding;
+
+    let activeItemNo = Math.floor(
+      (scrollLeft -
+        defaultSidePadding +
+        windowWidth / 2 +
+        locals.columnWidth / 2) /
+        locals.columnWidth
+    );
+
+    if (activeItemNo > numberOfItems) {
+      activeItemNo = numberOfItems - 1;
+    }
+
+    activeForecast = locals.dataSet.list[activeItemNo - 1];
+
+    columnsRemovedFromBeginning = Math.floor(
+      leftEdgeScrolled / locals.columnWidth
+    );
+
+    beforePadding =
+      leftEdgeScrolled -
+      (leftEdgeScrolled % locals.columnWidth) +
+      defaultSidePadding;
+
+    let itemsPassed =
+      (windowWidth + scrollLeft - defaultSidePadding) / locals.columnWidth;
+
+    if (itemsPassed > numberOfItems) {
+      itemsPassed = numberOfItems;
+    }
+
+    const noOfColumnsActive = itemsPassed - columnsRemovedFromBeginning;
+
+    afterPadding =
+      (numberOfItems - noOfColumnsActive - columnsRemovedFromBeginning) *
+        locals.columnWidth +
+      defaultSidePadding;
+
+    let sliceEnd = noOfColumnsActive + columnsRemovedFromBeginning + 1;
+    if (sliceEnd > numberOfItems + 1) {
+      sliceEnd = numberOfItems + 1;
     }
     scrollList = locals.dataSet.list.slice(
       columnsRemovedFromBeginning,
       sliceEnd
     );
 
-    for (let i = columnsRemovedFromBeginning; i < sliceEnd; i++) {
+    const maxSliceEnd = sliceEnd >= numberOfItems ? numberOfItems : sliceEnd;
+
+    for (let i = columnsRemovedFromBeginning; i < maxSliceEnd; i++) {
       const forecast = locals.dataSet.list[i];
       const baseCloudBall =
         (windowHeight * Math.pow(forecast.clouds.all || 0, 0.6)) / 100;
@@ -225,7 +265,7 @@
         img: memoizedCloudGenerator(
           i,
           canvas,
-          columnWidth,
+          locals.columnWidth,
           windowHeight,
           baseCloudBall,
           forecast.clouds.all,
@@ -236,7 +276,7 @@
     }
 
     const threeHoursInMs = 3 * 60 * 60 * 1000;
-    const onePxInMs = threeHoursInMs / columnWidth;
+    const onePxInMs = threeHoursInMs / locals.columnWidth;
     scrollDate = new Date(
       nearestForecastDate.getTime() + onePxInMs * scrollLeft
     );
@@ -258,10 +298,10 @@
   }
 
   const fetchForecast = async city => {
-    const urlWithCity = forecastUrl.replace("_city_", city);
+    /*     const urlWithCity = forecastUrl.replace("_city_", city);
     const response = await fetch(urlWithCity);
-    const data = await response.json();
-    // const data = forecastMock;
+    const data = await response.json(); */
+    const data = forecastMock;
 
     return data;
   };
@@ -364,17 +404,32 @@
   .weather-column {
     flex: 1 0 160px;
 
+    &.active {
+      .forecast:after {
+        content: "";
+        width: 0;
+        height: 0;
+        border-style: solid;
+        border-width: 14px 20px 0 20px;
+        border-color: #f5deb317 transparent transparent transparent;
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translate(-50%, -100%);
+      }
+    }
+
     .forecast {
       font-size: 1.2rem;
       position: relative;
-      top: calc(12vh + 5rem);
+      top: calc(25vh + 5rem);
       text-align: center;
       color: wheat;
     }
   }
   .date-time {
     position: absolute;
-    top: 6vh;
+    top: 4vh;
     left: 50%;
     transform: translateX(-50%);
     text-align: center;
@@ -439,7 +494,7 @@
   }
 </style>
 
-<svelte:window bind:outerWidth={windowWidth} bind:outerHeight={windowHeight} />
+<svelte:window bind:innerWidth={windowWidth} bind:innerHeight={windowHeight} />
 
 <svg class="svg-def">
   <defs>
@@ -479,12 +534,7 @@
           <path
             d="M21.557 14.914l-3.635-0.528-1.625-3.293-1.625 3.293-3.635 0.528
             2.63 2.564-0.621 3.62 3.251-1.709 3.251 1.709-0.621-3.62z" />
-          <!-- 
-        <path
-          class:glow-filter={!isMobile}
-          d="M21.557 14.914l-3.635-0.528-1.625-3.293-1.625 3.293-3.635 0.528
-          2.63 2.564-0.621 3.62 3.251-1.709 3.251 1.709-0.621-3.62z" />
- -->
+
         </svg>
       {/each}
     </div>
@@ -494,16 +544,10 @@
       rotate({moonRotationDeg}deg)">
       <div class="moon-bg" />
       <svg class="moon-svg" viewBox="0 0 32 32">
-
         <path
-          class:glow-filter={!isMobile}
+          class:glow-filter={!locals.isMobile}
           d="M16.034 21.918c{moonLeft} 0.000 {moonLeft} -11.743 0-11.741 {moonRight}
           0.023 {moonRight} 11.743 0 11.741z" />
-        <!--  <path
-        class="glow-filter"
-        d="M16.034 21.918c-7.812 0.072-7.812-11.743 0-11.741 7.792 0.023 7.792
-        11.743 0 11.741z" /> -->
-
       </svg>
 
     </div>
@@ -514,7 +558,7 @@
       rotate({sunLeftPosition * -7}deg)">
       <svg class="sun-svg" viewBox="0 0 32 32">
         <path
-          class:glow-filter={!isMobile}
+          class:glow-filter={!locals.isMobile}
           d="M13.795 18.232c0.217 0.24 0.271 0.542 0.121 0.678l-1.082 0.98c-0.15
           0.136-0.445
           0.052-0.662-0.188s-0.271-0.542-0.121-0.678l1.082-0.98c0.15-0.136
@@ -554,6 +598,9 @@
           {dateTime.toLocaleTimeString(undefined, { timeStyle: 'short' })}
         </span>
       </div>
+      {#if scrollList.length}
+        <ForecastStats {activeForecast} />
+      {/if}
     </div>
 
     <div
@@ -576,19 +623,19 @@
   {#if scrollList.length}
     <div
       class="weather-columns-wrap"
-      style="width:{scrollList.length * columnWidth}px;padding-left:{columnBeforePadding}px;padding-right:{columnAfterPadding}px">
+      style="width:{scrollList.length * locals.columnWidth}px;padding-left:{beforePadding}px;padding-right:{afterPadding}px">
 
       {#each scrollList as forecast, index}
-        <div class="weather-column">
+        <div
+          class="weather-column"
+          class:active={activeForecast.dt === forecast.dt}>
           <div class="forecast">
             {new Date(forecast.dt * 1000).toLocaleTimeString(undefined, {
               timeStyle: 'short'
             })}
-            <br />
-            {forecast.clouds.all}
             <div
               class="cloud"
-              style="left:-{cloudDataURIs[columnsRemovedFromBeginning + index].baseCloudBall}px">
+              style="filter:brightness({cloudBrightness});left:-{cloudDataURIs[columnsRemovedFromBeginning + index].baseCloudBall}px">
 
               <img
                 src={cloudDataURIs[columnsRemovedFromBeginning + index].img}

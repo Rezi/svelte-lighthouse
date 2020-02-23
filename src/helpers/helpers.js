@@ -6,3 +6,10 @@ export function memoize(func) {
     return (cache[key] = func(...args));
   };
 }
+
+export function isMobileDevice() {
+  return (
+    typeof window.orientation !== "undefined" ||
+    navigator.userAgent.indexOf("IEMobile") !== -1
+  );
+}

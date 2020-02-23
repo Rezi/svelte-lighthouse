@@ -1,4 +1,13 @@
-function setCloudGradient(ctx, x, y, innerRadius, xOuter, yOuter, outerRadius) {
+function setCloudGradient(
+  ctx,
+  x,
+  y,
+  innerRadius,
+  xOuter,
+  yOuter,
+  outerRadius,
+  clouds
+) {
   const cloudGradient = ctx.createRadialGradient(
     x,
     y,
@@ -7,9 +16,10 @@ function setCloudGradient(ctx, x, y, innerRadius, xOuter, yOuter, outerRadius) {
     yOuter,
     outerRadius
   );
-  cloudGradient.addColorStop(0, "#fefefe");
-  cloudGradient.addColorStop(0.6, "#e0e7eb");
-  cloudGradient.addColorStop(1, "#73959c");
+  const cloudOpacity = clouds / 150 + 0.25; // 0.25 - 1
+  cloudGradient.addColorStop(0, `hsla(0, 0%, 100%, ${cloudOpacity})`);
+  cloudGradient.addColorStop(0.6, `hsla(202, 22%, 90%, ${cloudOpacity})`);
+  cloudGradient.addColorStop(1, `hsla(190, 17%, 53%, ${cloudOpacity})`);
   ctx.fillStyle = cloudGradient;
 }
 
@@ -23,9 +33,16 @@ export function generateCloud(
   rain = 0,
   snow = 0
 ) {
+  if (!clouds) {
+    // return 1x1 transparent image
+    return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+  }
   const width = columnWidth + baseCloudBall;
+
   const maxCloudHeight = columnHeight / 3;
   const height = (maxCloudHeight * clouds) / 100;
+  canvas.width = width + baseCloudBall;
+  canvas.height = height + baseCloudBall;
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, 800, 800);
   const cloudLevelGap = baseCloudBall / 2;
@@ -72,7 +89,8 @@ export function generateCloud(
         0,
         positionLeft,
         cloudBallPositionBottom - ballHeight * 1.8,
-        ballHeight * 2.2
+        ballHeight * 2.2,
+        clouds
       );
 
       ctx.beginPath();
