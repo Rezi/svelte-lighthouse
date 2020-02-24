@@ -6,12 +6,10 @@
   import { generateCloud } from "../helpers/cloud-generator";
   import { memoize, isMobileDevice } from "../helpers/helpers";
   import ForecastStats from "./Forecast-stats.svelte";
+  import Moon from "./Moon.svelte";
 
   const forecastUrl =
     "https://api.openweathermap.org/data/2.5/forecast?q=_city_&APPID=a77e1d2fcad267b4ba535bd5fd05b6e7";
-
-  let moonLeft = 0;
-  let moonRight = 0;
 
   let canvas;
   let cloudDataURIs = [];
@@ -19,22 +17,17 @@
 
   let windowWidth;
   let windowHeight;
+  let animationKey;
 
-  let prevMoonPhase;
-  let nearestForecastDate;
+  let moonOpacity01To1;
+
   let beforePadding = 0;
   let afterPadding = 0;
   let activeForecast;
 
-  let moonBottomPosition;
-  let moonLeftPosition;
-  let moonRotationDeg;
-  let moonOpacity01To1;
-
   let sunBottomPosition;
   let sunLeftPosition;
   let sunDegAngle;
-  let sunFromLeft;
 
   let groundTopHsl;
   let groundBottomHsl;
@@ -46,19 +39,21 @@
 
   let scrollDate = new Date();
   let scrollList = [];
-  let scrollLeftGrouped = 0;
-  let dateTime = scrollDate;
+
   let date;
   let day;
 
   let stars = [];
   let starsOpacity0To1 = 0;
 
-  const locals = {
+  let locals = {
     scrollFromLeft: 0,
     dataSet: null,
     isMobile: false,
-    columnWidth: 160
+    columnWidth: 160,
+    prevMoonPhase: null,
+    nearestForecastDate: null,
+    scrollLeftGrouped: 0
   };
 
   const memoizedCloudGenerator = memoize(generateCloud);
@@ -76,13 +71,12 @@
   onMount(() => {
     locals.isMobile = isMobileDevice();
     fetchForecast("Hlavní město Praha").then(data => {
-      // locals.dataSet = forecastMock;
       locals.dataSet = data;
       activeForecast = locals.dataSet.list[0];
-
       scrollList = []; // add just three column to the list so we can measure the width of it
 
-      setDefaultValues(data);
+      const defaultValues = setDefaultValues(data);
+      locals = { ...locals, ...defaultValues };
 
       // make initial render
       countOnScrollFrame(0, true);
@@ -105,13 +99,13 @@
   function weatherScroll(event) {
     locals.scrollFromLeft = event.target.scrollLeft;
 
-    let animationKey = false;
+    animationKey = false;
     // only trigger animation each 50px of scrolling, 50px transitions are made by css transitions
     if (
-      locals.scrollFromLeft > scrollLeftGrouped + 50 ||
-      locals.scrollFromLeft < scrollLeftGrouped - 50
+      locals.scrollFromLeft > locals.scrollLeftGrouped + 50 ||
+      locals.scrollFromLeft < locals.scrollLeftGrouped - 50
     ) {
-      scrollLeftGrouped = locals.scrollFromLeft;
+      locals.scrollLeftGrouped = locals.scrollFromLeft;
       animationKey = true;
     }
     window.requestAnimationFrame(() => {
@@ -120,31 +114,13 @@
   }
 
   function setDefaultValues(data) {
-    nearestForecastDate = new Date(data.list[0].dt * 1000);
-    prevMoonPhase = sunCalc.getMoonIllumination(nearestForecastDate).phase;
+    const nearestForecastDate = new Date(data.list[0].dt * 1000);
+    const prevMoonPhase = sunCalc.getMoonIllumination(nearestForecastDate)
+      .phase;
+
+    return { nearestForecastDate, prevMoonPhase };
   }
 
-  function animateMoon(date, animationKey) {
-    let moonPhase = sunCalc.getMoonIllumination(date).phase; // 0 - 1;
-
-    if (animationKey) {
-      moonLeft = moonPhase < 0.5 ? 7.8 - moonPhase * 31.2 : -7.8;
-      moonRight = moonPhase >= 0.5 ? 7.8 - (moonPhase - 0.5) * 31.2 : 7.8;
-    }
-
-    prevMoonPhase = moonPhase;
-
-    const coords = locals.dataSet.city.coord;
-    const moonPosition = sunCalc.getMoonPosition(date, coords.lat, coords.lon);
-
-    moonBottomPosition =
-      (moonPosition.altitude * 100) / (Math.PI / 2) + 14 + "vh"; // 14 is extra for the bottom terrain
-
-    moonLeftPosition = (moonPosition.azimuth / Math.PI) * 50 + 50; // 0 - 100
-
-    moonRotationDeg = (moonPosition.parallacticAngle * 180) / Math.PI;
-    // max = Pi/2 rad
-  }
   function animateSun(date, animationKey) {
     const coords = locals.dataSet.city.coord;
 
@@ -277,13 +253,10 @@
 
     const threeHoursInMs = 3 * 60 * 60 * 1000;
     const onePxInMs = threeHoursInMs / locals.columnWidth;
-    scrollDate = new Date(
-      nearestForecastDate.getTime() + onePxInMs * scrollLeft
-    );
 
-    //if (animationKey) {
-    dateTime = scrollDate;
-    // }
+    scrollDate = new Date(
+      locals.nearestForecastDate.getTime() + onePxInMs * scrollLeft
+    );
 
     const newDay = days[scrollDate.getDay()];
 
@@ -292,7 +265,7 @@
       date = scrollDate.toLocaleDateString();
     }
 
-    animateMoon(scrollDate, animationKey);
+    // animateMoon(scrollDate, animationKey);
     animateSun(scrollDate, animationKey);
     colors(sunDegAngle, animationKey);
   }
@@ -341,33 +314,6 @@
       height: $sunnWidth * 2.75;
       fill: #ffdd40;
       transform: translate(-50%, -50%);
-    }
-  }
-
-  .moon {
-    $moonWidth: 10vh;
-    width: 0;
-    height: 0;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    padding-left: $cardinalDirectionsShift;
-    //transition: all 0.5s;
-
-    .moon-svg {
-      width: $moonWidth * 2.75;
-      height: $moonWidth * 2.75;
-      fill: #ffed9c;
-      transform: translate(-50%, -50%);
-    }
-
-    .moon-bg {
-      position: absolute;
-      transform: translate(-50%, -50%);
-      background-color: rgba(200, 200, 200, 0.015);
-      width: $moonWidth;
-      height: $moonWidth;
-      border-radius: 50%;
     }
   }
 
@@ -460,14 +406,7 @@
     width: $size;
     left: 50%;
     transform: translateX(-50%);
-    bottom: calc(#{-$size} + 20vh);
-    /*  background: rgb(0, 47, 0);
-    background: radial-gradient(
-      circle closest-side,
-      hsl(260, 73%, 22%) 85%,
-      hsl(58, 16%, 41%) 100%
-    ); */
-
+    bottom: calc(#{-$size} + 20vh); // 20vh ground height
     border-radius: 50%;
   }
 
@@ -498,23 +437,16 @@
 
 <svg class="svg-def">
   <defs>
-
     <filter id="strokeGlow" y="-10" x="-10" width="1000" height="1000">
-
       <feOffset in="StrokePaint" dx="0" dy="0" result="centeredOffset" />
-
       <feGaussianBlur in="centeredOffset" stdDeviation="1.5" result="blur1" />
       <feGaussianBlur in="centeredOffset" stdDeviation="4" result="blur2" />
-
       <feMerge>
-
         <feMergeNode in="blur1" />
         <feMergeNode in="blur2" />
-
         <feMergeNode in="SourceGraphic" />
       </feMerge>
     </filter>
-
   </defs>
 </svg>
 
@@ -526,31 +458,21 @@
     class="weather-bg-radial"
     style="background: radial-gradient( circle at 30% 75%, rgba(0, 0, 0, 0) 0%, {skyHalo}
     100% );">
-
     <div class="stars" style="opacity:{starsOpacity0To1}">
       {#each stars as starStyle}
         <svg class="star" viewBox="0 0 32 32" style={starStyle}>
-
           <path
             d="M21.557 14.914l-3.635-0.528-1.625-3.293-1.625 3.293-3.635 0.528
             2.63 2.564-0.621 3.62 3.251-1.709 3.251 1.709-0.621-3.62z" />
-
         </svg>
       {/each}
     </div>
-    <div
-      class="moon"
-      style="opacity:{moonOpacity01To1};transform:translate({moonLeftPosition}vw,-{moonBottomPosition})
-      rotate({moonRotationDeg}deg)">
-      <div class="moon-bg" />
-      <svg class="moon-svg" viewBox="0 0 32 32">
-        <path
-          class:glow-filter={!locals.isMobile}
-          d="M16.034 21.918c{moonLeft} 0.000 {moonLeft} -11.743 0-11.741 {moonRight}
-          0.023 {moonRight} 11.743 0 11.741z" />
-      </svg>
-
-    </div>
+    <Moon
+      {scrollDate}
+      isMobile={locals.isMobile}
+      {animationKey}
+      {locals}
+      {moonOpacity01To1} />
 
     <div
       class="sun"
@@ -585,7 +507,6 @@
           16.042c0 0 0 0 0 0 0 1.129-0.915 2.045-2.045 2.045v0c-1.129
           0-2.045-0.915-2.045-2.045 0 0 0 0 0 0v0c0-1.129 0.915-2.045
           2.045-2.045v0c1.129 0 2.045 0.915 2.045 2.045v0z" />
-
       </svg>
     </div>
 
@@ -595,7 +516,7 @@
         {date}
         <span class="realtime">
           <span class="separator">|</span>
-          {dateTime.toLocaleTimeString(undefined, { timeStyle: 'short' })}
+          {scrollDate.toLocaleTimeString(undefined, { timeStyle: 'short' })}
         </span>
       </div>
       {#if scrollList.length}
@@ -607,19 +528,16 @@
       class="ground"
       style="background: linear-gradient( 0deg, {groundBottomHsl} 89%, {groundTopHsl}
       100% );" />
-
     <div class="cardinal-directions">
       <div class="direction">N</div>
       <div class="direction">E</div>
       <div class="direction">S</div>
       <div class="direction">W</div>
     </div>
-
   </div>
 </div>
 
 <div class="weather-scroll" on:scroll={weatherScroll}>
-
   {#if scrollList.length}
     <div
       class="weather-columns-wrap"
@@ -636,13 +554,10 @@
             <div
               class="cloud"
               style="filter:brightness({cloudBrightness});left:-{cloudDataURIs[columnsRemovedFromBeginning + index].baseCloudBall}px">
-
               <img
                 src={cloudDataURIs[columnsRemovedFromBeginning + index].img}
                 alt="cloud" />
-
             </div>
-
           </div>
         </div>
       {/each}
