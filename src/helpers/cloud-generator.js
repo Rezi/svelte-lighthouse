@@ -19,7 +19,7 @@ function setCloudGradient(
   const cloudOpacity = clouds / 150 + 0.25; // 0.25 - 1
   cloudGradient.addColorStop(0, `hsla(0, 0%, 100%, ${cloudOpacity})`);
   cloudGradient.addColorStop(0.6, `hsla(202, 22%, 90%, ${cloudOpacity})`);
-  cloudGradient.addColorStop(1, `hsla(190, 17%, 53%, ${cloudOpacity})`);
+  cloudGradient.addColorStop(1, `hsla(190, 17%, 65%, ${cloudOpacity})`);
   ctx.fillStyle = cloudGradient;
 }
 

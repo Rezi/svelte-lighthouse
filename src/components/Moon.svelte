@@ -3,7 +3,6 @@
 
   export let scrollDate;
   export let animationKey;
-  export let isMobile;
   export let locals;
   export let moonOpacity01To1;
 
@@ -46,7 +45,7 @@
 </script>
 
 <style type="text/scss">
-  $cardinalDirectionsShift: 1rem;
+  @import "../variables.scss";
 
   .moon {
     $moonWidth: 10vh;
@@ -83,7 +82,7 @@
   <div class="moon-bg" />
   <svg class="moon-svg" viewBox="0 0 32 32">
     <path
-      class:glow-filter={!isMobile}
+      class:glow-filter={!locals.isMobile}
       d="M16.034 21.918c{moonLeft} 0.000 {moonLeft} -11.743 0-11.741 {moonRight}
       0.023 {moonRight} 11.743 0 11.741z" />
   </svg>

@@ -2,17 +2,20 @@
   import { sunCalc } from "../helpers/suncalc";
   import { forecastMock } from "../helpers/mock";
   import { onMount } from "svelte";
-  /*   import Cloud from "../components/Cloud.svelte"; */
   import { generateCloud } from "../helpers/cloud-generator";
   import { memoize, isMobileDevice } from "../helpers/helpers";
   import ForecastStats from "./Forecast-stats.svelte";
+
   import Moon from "./Moon.svelte";
+  import Sun from "./Sun.svelte";
+  import Stars from "./Stars.svelte";
+  import Rain from "./Rain.svelte";
 
   const forecastUrl =
     "https://api.openweathermap.org/data/2.5/forecast?q=_city_&APPID=a77e1d2fcad267b4ba535bd5fd05b6e7";
 
   let canvas;
-  let cloudDataURIs = [];
+  let cloudData = [];
   let columnsRemovedFromBeginning = 0;
 
   let windowWidth;
@@ -24,10 +27,6 @@
   let beforePadding = 0;
   let afterPadding = 0;
   let activeForecast;
-
-  let sunBottomPosition;
-  let sunLeftPosition;
-  let sunDegAngle;
 
   let groundTopHsl;
   let groundBottomHsl;
@@ -43,7 +42,6 @@
   let date;
   let day;
 
-  let stars = [];
   let starsOpacity0To1 = 0;
 
   let locals = {
@@ -72,6 +70,13 @@
     locals.isMobile = isMobileDevice();
     fetchForecast("Hlavní město Praha").then(data => {
       locals.dataSet = data;
+      locals.dataSet.list = locals.dataSet.list.map(forecast => {
+        const fallType = forecast.rain ? "rain" : "snow";
+        const rain = forecast.rain && forecast.rain["3h"];
+        const snow = forecast.snow && forecast.snow["3h"];
+        const rainSnow = rain || snow || 0;
+        return { ...forecast, rainSnow, fallType };
+      });
       activeForecast = locals.dataSet.list[0];
       scrollList = []; // add just three column to the list so we can measure the width of it
 
@@ -80,21 +85,8 @@
 
       // make initial render
       countOnScrollFrame(0, true);
-      generateStars();
     });
   });
-
-  function generateStars() {
-    const tempStars = [];
-    for (let i = 0; i < 20; i++) {
-      tempStars.push(
-        `transform:scale(${Math.random()}) translate(${Math.random() *
-          100}vw, ${Math.random() * 85}vh)`
-      );
-    }
-
-    stars = [...tempStars];
-  }
 
   function weatherScroll(event) {
     locals.scrollFromLeft = event.target.scrollLeft;
@@ -121,16 +113,6 @@
     return { nearestForecastDate, prevMoonPhase };
   }
 
-  function animateSun(date, animationKey) {
-    const coords = locals.dataSet.city.coord;
-
-    const sunPosition = sunCalc.getPosition(date, coords.lat, coords.lon);
-    sunDegAngle = (sunPosition.altitude * 100) / (Math.PI / 2);
-    sunBottomPosition = sunDegAngle + 14 + "vh"; // 14 is extra for the bottom terrain
-
-    sunLeftPosition = (sunPosition.azimuth / Math.PI) * 50 + 50; // 0 - 100
-  }
-
   function colors(sunAngleDeg, animationKey) {
     const itemScrolled = Math.floor(locals.scrollFromLeft / locals.columnWidth);
     const scrolledForecast = locals.dataSet.list[itemScrolled];
@@ -139,7 +121,6 @@
         (scrolledForecast.clouds && scrolledForecast.clouds.all) || 0;
 
       const saturation = 20 + (100 - cloudsInPercent) * 0.5; // saturation 20 - 70% depending on clouds
-      // const saturation = 100; // saturation 20 - 70% depending on clouds
 
       let lightness = sunAngleDeg < -5 ? -5 : sunAngleDeg; // start 5deg below horizon
       lightness += 5; // ensure we start with lightness of at least 0
@@ -170,8 +151,8 @@
       const skyBottomHueMax = 223;
       const skyTopHue = skyTopHueMax - lightnessExponential8To60 * 0.8;
       const skyBottomHue = skyBottomHueMax - lightnessExponential8To60 * 0.8;
-      skyTopHsl = `hsl(${skyTopHue}, ${saturation}%, ${lightnessExponential8To60}%)`;
-      skyBottomHsl = `hsl(${skyBottomHue}, ${saturation}%, ${lightnessExponential8To60}%)`;
+      skyTopHsl = `hsl(${skyBottomHue}, ${saturation}%, ${lightnessExponential8To60}%)`;
+      skyBottomHsl = `hsl(${skyTopHue}, ${saturation}%, ${lightnessExponential8To60}%)`;
       skyHalo = `hsla(0, 0%, 0%, ${darkness})`;
     }
   }
@@ -236,7 +217,7 @@
       const baseCloudBall =
         (windowHeight * Math.pow(forecast.clouds.all || 0, 0.6)) / 100;
 
-      cloudDataURIs[i] = {
+      cloudData[i] = {
         baseCloudBall,
         img: memoizedCloudGenerator(
           i,
@@ -264,14 +245,15 @@
       day = newDay;
       date = scrollDate.toLocaleDateString();
     }
+  }
 
-    // animateMoon(scrollDate, animationKey);
-    animateSun(scrollDate, animationKey);
+  function sunMoved(sunData) {
+    const { sunDegAngle, animationKey } = sunData.detail;
     colors(sunDegAngle, animationKey);
   }
 
   const fetchForecast = async city => {
-    /*     const urlWithCity = forecastUrl.replace("_city_", city);
+    /* const urlWithCity = forecastUrl.replace("_city_", city);
     const response = await fetch(urlWithCity);
     const data = await response.json(); */
     const data = forecastMock;
@@ -281,40 +263,12 @@
 </script>
 
 <style type="text/scss">
-  $cardinalDirectionsShift: 1rem;
+  @import "../variables.scss";
 
   .svg-def {
     position: absolute;
     width: 0;
     height: 0;
-  }
-  .stars {
-    .star {
-      fill: #cafbff;
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 3vh;
-      height: 3vh;
-    }
-  }
-
-  .sun {
-    $sunnWidth: 14vh;
-    width: 0;
-    height: 0;
-    position: absolute;
-    bottom: 0;
-    left: $cardinalDirectionsShift;
-
-    //transition: all 0.5s;
-
-    .sun-svg {
-      width: $sunnWidth * 2.75;
-      height: $sunnWidth * 2.75;
-      fill: #ffdd40;
-      transform: translate(-50%, -50%);
-    }
   }
 
   .glow-filter {
@@ -344,7 +298,7 @@
   .weather-columns-wrap {
     overflow: hidden;
     display: flex;
-    height: 96vh;
+    height: 100vh;
     position: relative;
   }
   .weather-column {
@@ -399,9 +353,18 @@
     }
   }
 
+  .ground-wrap {
+    overflow: hidden;
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
   .ground {
     $size: 300vh; // earth diameter
     position: absolute;
+    //z-index: 1;
     height: $size;
     width: $size;
     left: 50%;
@@ -456,59 +419,14 @@
   );">
   <div
     class="weather-bg-radial"
-    style="background: radial-gradient( circle at 30% 75%, rgba(0, 0, 0, 0) 0%, {skyHalo}
+    style="background: radial-gradient( circle at 20% 25%, rgba(0, 0, 0, 0) 0%, {skyHalo}
     100% );">
-    <div class="stars" style="opacity:{starsOpacity0To1}">
-      {#each stars as starStyle}
-        <svg class="star" viewBox="0 0 32 32" style={starStyle}>
-          <path
-            d="M21.557 14.914l-3.635-0.528-1.625-3.293-1.625 3.293-3.635 0.528
-            2.63 2.564-0.621 3.62 3.251-1.709 3.251 1.709-0.621-3.62z" />
-        </svg>
-      {/each}
-    </div>
-    <Moon
-      {scrollDate}
-      isMobile={locals.isMobile}
-      {animationKey}
-      {locals}
-      {moonOpacity01To1} />
 
-    <div
-      class="sun"
-      style="transform: translate({sunLeftPosition}vw,-{sunBottomPosition})
-      rotate({sunLeftPosition * -7}deg)">
-      <svg class="sun-svg" viewBox="0 0 32 32">
-        <path
-          class:glow-filter={!locals.isMobile}
-          d="M13.795 18.232c0.217 0.24 0.271 0.542 0.121 0.678l-1.082 0.98c-0.15
-          0.136-0.445
-          0.052-0.662-0.188s-0.271-0.542-0.121-0.678l1.082-0.98c0.15-0.136
-          0.445-0.052 0.662 0.188zM15.992 19.217c0.323 0.016 0.575 0.191 0.565
-          0.393l-0.072 1.458c-0.010 0.202-0.278 0.352-0.601
-          0.336s-0.575-0.191-0.565-0.393l0.072-1.458c0.010-0.202 0.278-0.352
-          0.601-0.336zM18.248 18.379c0.24-0.217 0.542-0.271 0.678-0.121l0.98
-          1.082c0.136 0.15 0.052 0.445-0.188 0.663s-0.542 0.271-0.678
-          0.121l-0.98-1.082c-0.136-0.15-0.052-0.445 0.188-0.663zM19.269
-          16.199c0.016-0.323 0.191-0.575 0.393-0.565l1.458 0.072c0.202 0.010
-          0.352 0.278 0.336 0.601s-0.191 0.575-0.393
-          0.565l-1.458-0.072c-0.202-0.010-0.352-0.278-0.336-0.601zM18.462
-          13.922c-0.217-0.239-0.272-0.542-0.123-0.678l1.080-0.982c0.15-0.136
-          0.445-0.053 0.663 0.187s0.272 0.542 0.123 0.678l-1.080 0.982c-0.15
-          0.136-0.445 0.053-0.663-0.187zM16.309
-          12.873c-0.323-0.016-0.575-0.192-0.565-0.394l0.074-1.458c0.010-0.202
-          0.279-0.351 0.602-0.335s0.575 0.192 0.565 0.394l-0.074 1.458c-0.010
-          0.202-0.279 0.351-0.602 0.335zM14.014 13.643c-0.239 0.218-0.542
-          0.272-0.678 0.123l-0.982-1.080c-0.136-0.15-0.053-0.445
-          0.187-0.663s0.542-0.272 0.678-0.123l0.982 1.080c0.136 0.15 0.053
-          0.445-0.187 0.663zM12.93 15.779c-0.016 0.323-0.192 0.575-0.394
-          0.565l-1.458-0.074c-0.202-0.010-0.351-0.278-0.335-0.602s0.192-0.575
-          0.394-0.565l1.458 0.074c0.202 0.010 0.351 0.278 0.335 0.602zM18.141
-          16.042c0 0 0 0 0 0 0 1.129-0.915 2.045-2.045 2.045v0c-1.129
-          0-2.045-0.915-2.045-2.045 0 0 0 0 0 0v0c0-1.129 0.915-2.045
-          2.045-2.045v0c1.129 0 2.045 0.915 2.045 2.045v0z" />
-      </svg>
-    </div>
+    <Stars {starsOpacity0To1} />
+
+    <Moon {scrollDate} {animationKey} {locals} {moonOpacity01To1} />
+
+    <Sun {scrollDate} {animationKey} {locals} on:sunDegChanged={sunMoved} />
 
     <div class="date-time">
       <div class="day">{day}</div>
@@ -524,16 +442,19 @@
       {/if}
     </div>
 
-    <div
-      class="ground"
-      style="background: linear-gradient( 0deg, {groundBottomHsl} 89%, {groundTopHsl}
-      100% );" />
-    <div class="cardinal-directions">
-      <div class="direction">N</div>
-      <div class="direction">E</div>
-      <div class="direction">S</div>
-      <div class="direction">W</div>
-    </div>
+  </div>
+</div>
+
+<div class="ground-wrap">
+  <div
+    class="ground"
+    style="background: linear-gradient( 0deg, {groundBottomHsl} 89%, {groundTopHsl}
+    100% );" />
+  <div class="cardinal-directions">
+    <div class="direction">N</div>
+    <div class="direction">E</div>
+    <div class="direction">S</div>
+    <div class="direction">W</div>
   </div>
 </div>
 
@@ -543,7 +464,7 @@
       class="weather-columns-wrap"
       style="width:{scrollList.length * locals.columnWidth}px;padding-left:{beforePadding}px;padding-right:{afterPadding}px">
 
-      {#each scrollList as forecast, index}
+      {#each scrollList as forecast, index (forecast.dt)}
         <div
           class="weather-column"
           class:active={activeForecast.dt === forecast.dt}>
@@ -553,10 +474,12 @@
             })}
             <div
               class="cloud"
-              style="filter:brightness({cloudBrightness});left:-{cloudDataURIs[columnsRemovedFromBeginning + index].baseCloudBall}px">
+              style="filter:brightness({cloudBrightness});left:-{cloudData[columnsRemovedFromBeginning + index].baseCloudBall}px">
               <img
-                src={cloudDataURIs[columnsRemovedFromBeginning + index].img}
+                src={cloudData[columnsRemovedFromBeginning + index].img}
                 alt="cloud" />
+
+              <Rain intensity={forecast.rainSnow} type={forecast.fallType} />
             </div>
           </div>
         </div>
