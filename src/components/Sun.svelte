@@ -4,7 +4,8 @@
 
   export let scrollDate;
   export let animationKey;
-  export let locals;
+  export let coords;
+  export let isMobile;
 
   const dispatch = createEventDispatcher();
 
@@ -14,14 +15,11 @@
   $: animateSun(scrollDate, animationKey);
 
   function animateSun(date, animationKey) {
-    if (locals.dataSet) {
-      const coords = locals.dataSet.city.coord;
-
+    if (coords) {
       const sunPosition = sunCalc.getPosition(date, coords.lat, coords.lon);
       const sunDegAngle = (sunPosition.altitude * 100) / (Math.PI / 2);
       sunBottomPosition = sunDegAngle + 14 + "vh"; // 14 is extra for the bottom terrain
       sunLeftPosition = (sunPosition.azimuth / Math.PI) * 50 + 50; // 0 - 100
-
       dispatch("sunDegChanged", { sunDegAngle, animationKey });
     }
   }
@@ -54,7 +52,7 @@
   style="transform: translate({sunLeftPosition}vw,-{sunBottomPosition}) rotate({sunLeftPosition * -7}deg)">
   <svg class="sun-svg" viewBox="0 0 32 32">
     <path
-      class:glow-filter={!locals.isMobile}
+      class:glow-filter={!isMobile}
       d="M13.795 18.232c0.217 0.24 0.271 0.542 0.121 0.678l-1.082 0.98c-0.15
       0.136-0.445
       0.052-0.662-0.188s-0.271-0.542-0.121-0.678l1.082-0.98c0.15-0.136

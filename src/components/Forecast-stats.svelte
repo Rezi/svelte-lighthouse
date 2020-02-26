@@ -3,6 +3,7 @@
 </script>
 
 <style type="text/scss">
+  @import "../variables.scss";
   .flex {
     display: flex;
     align-items: center;
@@ -25,13 +26,13 @@
     }
 
     td {
-      color: wheat;
+      color: $colorBase;
 
       .stat-icon {
         margin-right: 0.5rem;
         height: 7vw;
         max-height: 3rem;
-        fill: wheat;
+        fill: $colorBase;
       }
     }
   }
