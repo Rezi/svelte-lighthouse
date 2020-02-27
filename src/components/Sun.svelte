@@ -12,6 +12,13 @@
   let sunBottomPosition;
   let sunLeftPosition;
 
+  const myWorker = new Worker("workers/sun-worker.js");
+  console.log(myWorker);
+  myWorker.postMessage("a");
+  myWorker.onmessage = function(e) {
+    console.log(e);
+  };
+
   $: animateSun(scrollDate, animationKey);
 
   function animateSun(date, animationKey) {
