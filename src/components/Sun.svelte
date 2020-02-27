@@ -1,4 +1,5 @@
 <script>
+  import * as Comlink from "comlink";
   import { sunCalc } from "../helpers/suncalc";
   import { createEventDispatcher } from "svelte";
 
@@ -12,22 +13,22 @@
   let sunBottomPosition;
   let sunLeftPosition;
 
-  const myWorker = new Worker("workers/sun-worker.js");
-  console.log(myWorker);
-  myWorker.postMessage("a");
-  myWorker.onmessage = function(e) {
-    console.log(e);
-  };
+  const workerFunctions = Comlink.wrap(new Worker("worker.js"));
 
-  $: animateSun(scrollDate, animationKey);
+  $: animateSun(scrollDate, animationKey, coords);
 
-  function animateSun(date, animationKey) {
+  async function animateSun(date, animationKey, coords) {
     if (coords) {
-      const sunPosition = sunCalc.getPosition(date, coords.lat, coords.lon);
-      const sunDegAngle = (sunPosition.altitude * 100) / (Math.PI / 2);
-      sunBottomPosition = sunDegAngle + 14 + "vh"; // 14 is extra for the bottom terrain
-      sunLeftPosition = (sunPosition.azimuth / Math.PI) * 50 + 50; // 0 - 100
-      dispatch("sunDegChanged", { sunDegAngle, animationKey });
+      const workerAnimationresult = await workerFunctions.animateSun(
+        date,
+        animationKey,
+        coords
+      );
+
+      sunBottomPosition = workerAnimationresult.sunBottomPosition;
+      sunLeftPosition = workerAnimationresult.sunLeftPosition;
+
+      dispatch("sunDegChanged", workerAnimationresult);
     }
   }
 </script>
