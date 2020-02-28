@@ -101,9 +101,11 @@
       locals.scrollLeftGrouped = locals.scrollFromLeft;
       animationKey = true;
     }
-    window.requestAnimationFrame(() => {
-      countOnScrollFrame(locals.scrollFromLeft, animationKey);
-    });
+    if (!!window) {
+      window.requestAnimationFrame(() => {
+        countOnScrollFrame(locals.scrollFromLeft, animationKey);
+      });
+    }
   }
 
   function setDefaultValues(data) {

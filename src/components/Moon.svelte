@@ -1,45 +1,41 @@
 <script>
-  import { sunCalc } from "../helpers/suncalc";
+  import * as Comlink from "comlink";
+  import { hasWorkerSupport } from "../helpers/helpers";
 
   export let scrollDate;
   export let animationKey;
   export let locals;
-  export let moonOpacity01To1;
+  export let moonOpacity01To1 = 0;
 
-  let moonBottomPosition;
-  let moonLeftPosition;
-  let moonRotationDeg;
-
+  let moonBottomPosition = 0;
+  let moonLeftPosition = 0;
+  let moonRotationDeg = 0;
   let moonLeft = 0;
   let moonRight = 0;
 
-  $: animateMoon(scrollDate, animationKey);
+  const workerFunctions = hasWorkerSupport()
+    ? Comlink.wrap(new Worker("worker.js"))
+    : undefined;
 
-  function animateMoon(date, animationKey) {
-    if (locals.dataSet) {
-      let moonPhase = sunCalc.getMoonIllumination(date).phase; // 0 - 1;
+  $: animateMoon(scrollDate);
 
-      if (animationKey) {
-        moonLeft = moonPhase < 0.5 ? 7.8 - moonPhase * 31.2 : -7.8;
-        moonRight = moonPhase >= 0.5 ? 7.8 - (moonPhase - 0.5) * 31.2 : 7.8;
-      }
-
-      locals.prevMoonPhase = moonPhase;
-
-      const coords = locals.dataSet.city.coord;
-      const moonPosition = sunCalc.getMoonPosition(
-        date,
-        coords.lat,
-        coords.lon
+  async function animateMoon(date) {
+    if (hasWorkerSupport() && locals && locals.dataSet) {
+      const workerAnimationresult = await workerFunctions.animateMoon(
+        scrollDate,
+        animationKey,
+        locals,
+        moonLeft,
+        moonRight
       );
 
-      moonBottomPosition =
-        (moonPosition.altitude * 100) / (Math.PI / 2) + 14 + "vh"; // 14 is extra for the bottom terrain
-
-      moonLeftPosition = (moonPosition.azimuth / Math.PI) * 50 + 50; // 0 - 100
-
-      moonRotationDeg = (moonPosition.parallacticAngle * 180) / Math.PI;
-      // max = Pi/2 rad
+      ({
+        moonBottomPosition,
+        moonLeftPosition,
+        moonRotationDeg,
+        moonLeft,
+        moonRight
+      } = workerAnimationresult);
     }
   }
 </script>

@@ -1,32 +1,34 @@
 <script>
   import * as Comlink from "comlink";
-  import { sunCalc } from "../helpers/suncalc";
   import { createEventDispatcher } from "svelte";
+  import { hasWorkerSupport } from "../helpers/helpers";
 
   export let scrollDate;
   export let animationKey;
   export let coords;
   export let isMobile;
 
+  let sunBottomPosition = 0;
+  let sunLeftPosition = 0;
+
   const dispatch = createEventDispatcher();
-
-  let sunBottomPosition;
-  let sunLeftPosition;
-
-  const workerFunctions = Comlink.wrap(new Worker("worker.js"));
+  const workerFunctions = hasWorkerSupport()
+    ? Comlink.wrap(new Worker("worker.js"))
+    : undefined;
+  // emit default values
+  dispatch("sunDegChanged", { sunDegAngle: 0, animationKey: false });
 
   $: animateSun(scrollDate, animationKey, coords);
 
   async function animateSun(date, animationKey, coords) {
-    if (coords) {
+    if (coords && hasWorkerSupport()) {
       const workerAnimationresult = await workerFunctions.animateSun(
         date,
         animationKey,
         coords
       );
 
-      sunBottomPosition = workerAnimationresult.sunBottomPosition;
-      sunLeftPosition = workerAnimationresult.sunLeftPosition;
+      ({ sunBottomPosition, sunLeftPosition } = workerAnimationresult);
 
       dispatch("sunDegChanged", workerAnimationresult);
     }

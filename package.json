@@ -1,6 +1,6 @@
 {
-  "name": "TODO",
-  "description": "TODO",
+  "name": "lighthouse-weather",
+  "description": "Sapper App, optimized for performance",
   "version": "0.0.1",
   "scripts": {
     "dev": "sapper dev",
@@ -19,9 +19,6 @@
     "sirv": "^0.4.0"
   },
   "devDependencies": {
-    "npm-run-all": "^4.1.5",
-    "sapper": "github:Rezi/sapper#master",
-    "svelte": "^3.19.1",
     "@babel/core": "^7.0.0",
     "@babel/plugin-syntax-dynamic-import": "^7.0.0",
     "@babel/plugin-transform-runtime": "^7.0.0",
@@ -30,10 +27,14 @@
     "@rollup/plugin-commonjs": "^11.0.0",
     "@rollup/plugin-node-resolve": "^7.0.0",
     "@rollup/plugin-replace": "^2.2.0",
+    "node-sass": "^4.12.0",
+    "npm-run-all": "^4.1.5",
     "rollup": "^1.20.0",
     "rollup-plugin-babel": "^4.0.2",
     "rollup-plugin-svelte": "^5.0.1",
     "rollup-plugin-terser": "^4.0.4",
-    "node-sass": "^4.12.0"
+    "sapper": "github:Rezi/sapper#master",
+    "serve": "^11.3.0",
+    "svelte": "^3.19.1"
   }
 }
