@@ -3,6 +3,7 @@
   import { forecastMock } from "../helpers/mock";
   import { onMount } from "svelte";
   import { generateCloud } from "../helpers/cloud-generator";
+  import { getColors } from "../helpers/colors";
   import { memoize, isMobileDevice } from "../helpers/helpers";
   import ForecastStats from "./Forecast-stats.svelte";
 
@@ -21,7 +22,7 @@
 
   let windowWidth;
   let windowHeight;
-  let animationKey;
+  let animationKey = true;
 
   let moonOpacity01To1;
 
@@ -49,13 +50,14 @@
     scrollFromLeft: 0,
     dataSet: null,
     isMobile: false,
-    columnWidth: 160,
+    columnWidth: 180,
     prevMoonPhase: null,
     nearestForecastDate: null,
     scrollLeftGrouped: 0
   };
 
   const memoizedCloudGenerator = memoize(generateCloud);
+  const memoizedColors = memoize(getColors);
 
   const days = [
     "Sunday",
@@ -85,7 +87,7 @@
       locals = { ...locals, ...defaultValues };
 
       // make initial render
-      countOnScrollFrame(0, true);
+      countOnScrollFrame(0, animationKey);
     });
   });
 
@@ -93,10 +95,11 @@
     locals.scrollFromLeft = event.target.scrollLeft;
 
     animationKey = false;
-    // only trigger animation each 50px of scrolling, 50px transitions are made by css transitions
+    // one px = 1 min
+    // lets trigger some animations only every 10 minutes
     if (
-      locals.scrollFromLeft > locals.scrollLeftGrouped + 50 ||
-      locals.scrollFromLeft < locals.scrollLeftGrouped - 50
+      locals.scrollFromLeft > locals.scrollLeftGrouped + 10 ||
+      locals.scrollFromLeft < locals.scrollLeftGrouped - 10
     ) {
       locals.scrollLeftGrouped = locals.scrollFromLeft;
       animationKey = true;
@@ -117,125 +120,23 @@
   }
 
   function colors(sunAngleDeg, animationKey) {
-    const itemScrolled = Math.floor(locals.scrollFromLeft / locals.columnWidth);
+    if (animationKey && locals) {
+      const responseColors = memoizedColors(locals, sunAngleDeg);
 
-    const scrolledForecast = locals.dataSet.list[itemScrolled];
-    if (scrolledForecast) {
-      const cloudsInPercent =
-        (scrolledForecast.clouds && scrolledForecast.clouds.all) || 0;
-
-      const saturation = 20 + (100 - cloudsInPercent) * 0.5; // saturation 20 - 70% depending on clouds
-
-      let lightness = sunAngleDeg < -5 ? -5 : sunAngleDeg; // start 5deg below horizon
-      lightness += 5; // ensure we start with lightness of at least 0
-      lightness = lightness > 100 ? 100 : lightness; // 0 - 100
-
-      const lightnessTo16 = lightness / 6.25; // 0 - 16
-      const lightnessExponential = Math.pow(lightnessTo16, 0.25); // 0-2;  1 => 1,  16 => 2
-      const lightnessExponential8To60 = lightnessExponential * 26 + 8;
-      moonOpacity01To1 = 1 - lightnessExponential * 0.45;
-      starsOpacity0To1 = 1 - lightnessExponential - cloudsInPercent / 100;
-
-      cloudBrightness = lightnessExponential / 2.06 + 0.12;
-
-      const darkness = 1 - lightness / 100;
-
-      const groundTopHueMax = 38;
-      const groundBottomHueMax = 260;
-      const groundTopHue = groundTopHueMax + lightnessExponential8To60;
-      const groundBottomHue =
-        groundBottomHueMax - lightnessExponential8To60 * 1.5;
-      const groundLightness = Math.pow(lightnessExponential8To60, 0.85);
-      groundTopHsl = `hsl(${groundTopHue}, ${saturation +
-        20}%, ${groundLightness}%)`;
-      groundBottomHsl = `hsl(${groundBottomHue}, ${saturation +
-        20}%, ${groundLightness}%)`;
-
-      const skyTopHueMax = 243;
-      const skyBottomHueMax = 223;
-      const skyTopHue = skyTopHueMax - lightnessExponential8To60 * 0.8;
-      const skyBottomHue = skyBottomHueMax - lightnessExponential8To60 * 0.8;
-      skyTopHsl = `hsl(${skyBottomHue}, ${saturation}%, ${lightnessExponential8To60}%)`;
-      skyBottomHsl = `hsl(${skyTopHue}, ${saturation}%, ${lightnessExponential8To60}%)`;
-      skyHalo = `hsla(0, 0%, 0%, ${darkness})`;
+      ({
+        groundTopHsl,
+        groundBottomHsl,
+        moonOpacity01To1,
+        starsOpacity0To1,
+        cloudBrightness,
+        skyTopHsl,
+        skyBottomHsl,
+        skyHalo
+      } = responseColors);
     }
   }
 
   function countOnScrollFrame(scrollLeft, animationKey) {
-    const numberOfItems = locals.dataSet.list.length;
-
-    const defaultSidePadding = windowWidth / 2 - locals.columnWidth / 2;
-    let leftEdgeScrolled =
-      scrollLeft - defaultSidePadding < 0 ? 0 : scrollLeft - defaultSidePadding;
-
-    let activeItemNo = Math.floor(
-      (scrollLeft -
-        defaultSidePadding +
-        windowWidth / 2 +
-        locals.columnWidth / 2) /
-        locals.columnWidth
-    );
-
-    if (activeItemNo > numberOfItems) {
-      activeItemNo = numberOfItems - 1;
-    }
-
-    activeForecast = locals.dataSet.list[activeItemNo - 1];
-
-    columnsRemovedFromBeginning = Math.floor(
-      leftEdgeScrolled / locals.columnWidth
-    );
-
-    beforePadding =
-      leftEdgeScrolled -
-      (leftEdgeScrolled % locals.columnWidth) +
-      defaultSidePadding;
-
-    let itemsPassed =
-      (windowWidth + scrollLeft - defaultSidePadding) / locals.columnWidth;
-
-    if (itemsPassed > numberOfItems) {
-      itemsPassed = numberOfItems;
-    }
-
-    const noOfColumnsActive = itemsPassed - columnsRemovedFromBeginning;
-
-    afterPadding =
-      (numberOfItems - noOfColumnsActive - columnsRemovedFromBeginning) *
-        locals.columnWidth +
-      defaultSidePadding;
-
-    let sliceEnd = noOfColumnsActive + columnsRemovedFromBeginning + 1;
-    if (sliceEnd > numberOfItems + 1) {
-      sliceEnd = numberOfItems + 1;
-    }
-    scrollList = locals.dataSet.list.slice(
-      columnsRemovedFromBeginning,
-      sliceEnd
-    );
-
-    const maxSliceEnd = sliceEnd >= numberOfItems ? numberOfItems : sliceEnd;
-
-    for (let i = columnsRemovedFromBeginning; i < maxSliceEnd; i++) {
-      const forecast = locals.dataSet.list[i];
-      const baseCloudBall =
-        (windowHeight * Math.pow(forecast.clouds.all || 0, 0.6)) / 100;
-
-      cloudData[i] = {
-        baseCloudBall,
-        img: memoizedCloudGenerator(
-          i,
-          canvas,
-          locals.columnWidth,
-          windowHeight,
-          baseCloudBall,
-          forecast.clouds.all,
-          (forecast.rain && forecast.rain["3h"]) || 0,
-          (forecast.snow && forecast.snow["3h"]) || 0
-        )
-      };
-    }
-
     const threeHoursInMs = 3 * 60 * 60 * 1000;
     const onePxInMs = threeHoursInMs / locals.columnWidth;
 
@@ -243,11 +144,89 @@
       locals.nearestForecastDate.getTime() + onePxInMs * scrollLeft
     );
 
-    const newDay = days[scrollDate.getDay()];
+    if (animationKey) {
+      const numberOfItems = locals.dataSet.list.length;
 
-    if (day !== newDay) {
-      day = newDay;
-      date = scrollDate.toLocaleDateString();
+      const defaultSidePadding = windowWidth / 2 - locals.columnWidth / 2;
+      let leftEdgeScrolled =
+        scrollLeft - defaultSidePadding < 0
+          ? 0
+          : scrollLeft - defaultSidePadding;
+
+      let activeItemNo = Math.floor(
+        (scrollLeft -
+          defaultSidePadding +
+          windowWidth / 2 +
+          locals.columnWidth / 2) /
+          locals.columnWidth
+      );
+
+      if (activeItemNo > numberOfItems) {
+        activeItemNo = numberOfItems - 1;
+      }
+
+      activeForecast = locals.dataSet.list[activeItemNo - 1];
+
+      columnsRemovedFromBeginning = Math.floor(
+        leftEdgeScrolled / locals.columnWidth
+      );
+
+      beforePadding =
+        leftEdgeScrolled -
+        (leftEdgeScrolled % locals.columnWidth) +
+        defaultSidePadding;
+
+      let itemsPassed =
+        (windowWidth + scrollLeft - defaultSidePadding) / locals.columnWidth;
+
+      if (itemsPassed > numberOfItems) {
+        itemsPassed = numberOfItems;
+      }
+
+      const noOfColumnsActive = itemsPassed - columnsRemovedFromBeginning;
+
+      afterPadding =
+        (numberOfItems - noOfColumnsActive - columnsRemovedFromBeginning) *
+          locals.columnWidth +
+        defaultSidePadding;
+
+      let sliceEnd = noOfColumnsActive + columnsRemovedFromBeginning + 1;
+      if (sliceEnd > numberOfItems + 1) {
+        sliceEnd = numberOfItems + 1;
+      }
+      scrollList = locals.dataSet.list.slice(
+        columnsRemovedFromBeginning,
+        sliceEnd
+      );
+
+      const maxSliceEnd = sliceEnd >= numberOfItems ? numberOfItems : sliceEnd;
+
+      for (let i = columnsRemovedFromBeginning; i < maxSliceEnd; i++) {
+        const forecast = locals.dataSet.list[i];
+        const baseCloudBall =
+          (windowHeight * Math.pow(forecast.clouds.all || 0, 0.6)) / 100;
+
+        cloudData[i] = {
+          baseCloudBall,
+          img: memoizedCloudGenerator(
+            i,
+            canvas,
+            locals.columnWidth,
+            windowHeight,
+            baseCloudBall,
+            forecast.clouds.all,
+            (forecast.rain && forecast.rain["3h"]) || 0,
+            (forecast.snow && forecast.snow["3h"]) || 0
+          )
+        };
+      }
+
+      const newDay = days[scrollDate.getDay()];
+
+      if (day !== newDay) {
+        day = newDay;
+        date = scrollDate.toLocaleDateString();
+      }
     }
   }
 
@@ -306,7 +285,7 @@
     position: relative;
   }
   .weather-column {
-    flex: 1 0 160px;
+    flex: 1 0 180px;
 
     &.active {
       .forecast:after {

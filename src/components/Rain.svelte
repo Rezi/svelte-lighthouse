@@ -29,7 +29,7 @@
     position: absolute;
     top: 65%;
     left: 50%;
-    width: 160px;
+    width: 180px;
     height: 40vh;
     z-index: -1;
     transform: translateX(-50%);

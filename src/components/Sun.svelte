@@ -16,8 +16,6 @@
     isBrowser() && hasWorkerSupport()
       ? Comlink.wrap(new Worker("worker.js"))
       : undefined;
-  // emit default values
-  dispatch("sunDegChanged", { sunDegAngle: 0, animationKey: false });
 
   $: animateSun(scrollDate, animationKey, coords);
 
@@ -29,9 +27,12 @@
         coords
       );
 
-      ({ sunBottomPosition, sunLeftPosition } = workerAnimationresult);
-
-      dispatch("sunDegChanged", workerAnimationresult);
+      if (isBrowser()) {
+        window.requestAnimationFrame(() => {
+          ({ sunBottomPosition, sunLeftPosition } = workerAnimationresult);
+          dispatch("sunDegChanged", workerAnimationresult);
+        });
+      }
     }
   }
 </script>

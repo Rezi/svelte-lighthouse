@@ -30,13 +30,17 @@
         moonRight
       );
 
-      ({
-        moonBottomPosition,
-        moonLeftPosition,
-        moonRotationDeg,
-        moonLeft,
-        moonRight
-      } = workerAnimationresult);
+      if (isBrowser()) {
+        window.requestAnimationFrame(() => {
+          ({
+            moonBottomPosition,
+            moonLeftPosition,
+            moonRotationDeg,
+            moonLeft,
+            moonRight
+          } = workerAnimationresult);
+        });
+      }
     }
   }
 </script>
