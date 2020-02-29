@@ -1,7 +1,7 @@
 <script>
   import * as Comlink from "comlink";
   import { createEventDispatcher } from "svelte";
-  import { hasWorkerSupport } from "../helpers/helpers";
+  import { hasWorkerSupport, isBrowser } from "../helpers/helpers";
 
   export let scrollDate;
   export let animationKey;
@@ -12,16 +12,17 @@
   let sunLeftPosition = 0;
 
   const dispatch = createEventDispatcher();
-  const workerFunctions = hasWorkerSupport()
-    ? Comlink.wrap(new Worker("worker.js"))
-    : undefined;
+  const workerFunctions =
+    isBrowser() && hasWorkerSupport()
+      ? Comlink.wrap(new Worker("worker.js"))
+      : undefined;
   // emit default values
   dispatch("sunDegChanged", { sunDegAngle: 0, animationKey: false });
 
   $: animateSun(scrollDate, animationKey, coords);
 
   async function animateSun(date, animationKey, coords) {
-    if (coords && hasWorkerSupport()) {
+    if (coords && workerFunctions) {
       const workerAnimationresult = await workerFunctions.animateSun(
         date,
         animationKey,

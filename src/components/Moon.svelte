@@ -1,6 +1,6 @@
 <script>
   import * as Comlink from "comlink";
-  import { hasWorkerSupport } from "../helpers/helpers";
+  import { hasWorkerSupport, isBrowser } from "../helpers/helpers";
 
   export let scrollDate;
   export let animationKey;
@@ -13,14 +13,15 @@
   let moonLeft = 0;
   let moonRight = 0;
 
-  const workerFunctions = hasWorkerSupport()
-    ? Comlink.wrap(new Worker("worker.js"))
-    : undefined;
+  const workerFunctions =
+    isBrowser() && hasWorkerSupport()
+      ? Comlink.wrap(new Worker("worker.js"))
+      : undefined;
 
   $: animateMoon(scrollDate);
 
   async function animateMoon(date) {
-    if (hasWorkerSupport() && locals && locals.dataSet) {
+    if (workerFunctions && locals && locals.dataSet) {
       const workerAnimationresult = await workerFunctions.animateMoon(
         scrollDate,
         animationKey,

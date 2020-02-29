@@ -9,12 +9,16 @@ export function memoize(func) {
 
 export function isMobileDevice() {
   return (
-    !!window &&
-    (typeof window.orientation !== 'undefined' ||
-      navigator.userAgent.indexOf('IEMobile') !== -1)
+    window &&
+    (typeof window.orientation !== "undefined" ||
+      navigator.userAgent.indexOf("IEMobile") !== -1)
   );
 }
 
 export function hasWorkerSupport() {
-  return !!window && !!window.Worker;
+  return window && !!window.Worker;
 }
+
+export const isBrowser = new Function(
+  "try {return this === window;}catch(e){return false;}"
+);

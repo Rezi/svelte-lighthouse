@@ -101,7 +101,7 @@
       locals.scrollLeftGrouped = locals.scrollFromLeft;
       animationKey = true;
     }
-    if (!!window) {
+    if (window) {
       window.requestAnimationFrame(() => {
         countOnScrollFrame(locals.scrollFromLeft, animationKey);
       });
@@ -257,10 +257,10 @@
   }
 
   const fetchForecast = async city => {
-    /* const urlWithCity = forecastUrl.replace("_city_", city);
+    const urlWithCity = forecastUrl.replace("_city_", city);
     const response = await fetch(urlWithCity);
-    const data = await response.json(); */
-    const data = forecastMock;
+    const data = await response.json();
+    // const data = forecastMock;
 
     return data;
   };
