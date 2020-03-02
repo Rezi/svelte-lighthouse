@@ -1,5 +1,22 @@
 <script>
+  import { createEventDispatcher } from "svelte";
   export let activeForecast;
+  let kelvins = 272.15;
+
+  const dispatch = createEventDispatcher();
+  let statToggled = {
+    temp: false,
+    pressure: false,
+    humidity: false,
+    rainsnow: false,
+    wind: false,
+    clouds: false
+  };
+
+  function showStats(type) {
+    statToggled[type] = !statToggled[type];
+    dispatch("statToggle", { type, show: statToggled[type] });
+  }
 </script>
 
 <style type="text/scss">
@@ -7,6 +24,32 @@
   .flex {
     display: flex;
     align-items: center;
+    color: $colorBase;
+    cursor: pointer;
+  }
+
+  .temp {
+    color: $temp;
+  }
+
+  .pressure {
+    color: $pressure;
+  }
+
+  .humidity {
+    color: $humidity;
+  }
+
+  .clouds {
+    color: $clouds;
+  }
+
+  .wind {
+    color: $wind;
+  }
+
+  .rainsnow {
+    color: $rainsnow;
   }
 
   table {
@@ -26,15 +69,15 @@
     }
 
     td {
-      color: $colorBase;
-
-      .stat-icon {
-        margin-right: 0.5rem;
-        height: 4.5vh;
-        max-height: 3rem;
-        fill: $colorBase;
-      }
+      color: currentColor;
     }
+  }
+
+  .stat-icon {
+    margin-right: 0.5rem;
+    height: 4.5vh;
+    max-height: 3rem;
+    fill: currentColor;
   }
 </style>
 
@@ -44,7 +87,12 @@
       <tr>
 
         <td>
-          <div class="flex">
+          <div
+            class="flex"
+            class:temp={statToggled.temp}
+            on:click={() => {
+              showStats('temp');
+            }}>
             <svg class="stat-icon" viewBox="0 0 16 28">
               <title>temperature</title>
               <path
@@ -57,11 +105,17 @@
                 1.266 2 2.984 2 4.891zM16 12v2h-3v-2h3zM16 8v2h-3v-2h3zM16
                 4v2h-3v-2h3z" />
             </svg>
-            {(activeForecast.main.temp - 272.15).toFixed(1)}°C
+            {(activeForecast.main.temp - kelvins).toFixed(1)}°C
           </div>
         </td>
         <td>
-          <div class="flex">
+          <div
+            class="flex"
+            class:clouds={statToggled.clouds}
+            on:click={() => {
+              showStats('clouds');
+            }}>
+
             <svg class="stat-icon" viewBox="0 0 32 32">
               <title>cloud</title>
               <path
@@ -83,8 +137,13 @@
           </div>
         </td>
         <td>
-          <div class="flex">
-            <svg class="stat-icon" viewBox="0 0 24 24">
+          <div
+            class="flex"
+            class:humidity={statToggled.humidity}
+            on:click={() => {
+              showStats('humidity');
+            }}>
+            <svg class="stat-icon " viewBox="0 0 24 24">
               <title>humidity</title>
               <path
                 d="M12.707 1.983c-0.391-0.391-1.025-0.39-1.415 0.001l-5.653
@@ -103,7 +162,12 @@
       </tr>
       <tr>
         <td>
-          <div class="flex">
+          <div
+            class="flex"
+            class:rainsnow={statToggled.rainsnow}
+            on:click={() => {
+              showStats('rainsnow');
+            }}>
             {#if activeForecast.rain || !(activeForecast.rain || activeForecast.snow)}
               <svg class="stat-icon" viewBox="0 0 32 32">
                 <title>rain</title>
@@ -203,8 +267,13 @@
 
         </td>
         <td>
-          <div class="flex">
-            <svg class="stat-icon" viewBox="0 0 24 24">
+          <div
+            class="flex"
+            class:wind={statToggled.wind}
+            on:click={() => {
+              showStats('wind');
+            }}>
+            <svg class="stat-icon " viewBox="0 0 24 24">
               <title>wind</title>
               <path
                 d="M22.5 10.5c0-1.657-1.347-3-3-3-1.657 0-3 1.342-3
@@ -223,8 +292,13 @@
           </div>
         </td>
         <td>
-          <div class="flex">
-            <svg class="stat-icon" viewBox="0 0 30 28">
+          <div
+            class="flex"
+            class:pressure={statToggled.pressure}
+            on:click={() => {
+              showStats('pressure');
+            }}>
+            <svg class="stat-icon " viewBox="0 0 30 28">
               <title>atmospheric pressure</title>
               <path
                 d="M20

@@ -8,9 +8,9 @@
   export let locals;
   export let animationKey;
   export let cloudBrightness;
+  export let windowWidth;
+  export let windowHeight;
 
-  let windowWidth;
-  let windowHeight;
   let canvas;
   let scrollList = [];
   let cloudData = [];
@@ -18,6 +18,7 @@
   let columnsRemovedFromBeginning = 0;
   let beforePadding = 0;
   let afterPadding = 0;
+  let downscaled = 5;
 
   const memoizedCloudGenerator = memoize(generateCloud);
   const dispatch = createEventDispatcher();
@@ -101,7 +102,7 @@
             forecast.clouds.all,
             (forecast.rain && forecast.rain["3h"]) || 0,
             (forecast.snow && forecast.snow["3h"]) || 0,
-            5 // scaled down 5x
+            downscaled // scaled down 5x
           )
         };
       }
@@ -147,8 +148,10 @@
 
   .cloud {
     position: absolute;
+    width: 100%;
     img {
-      width: 500%; // scaled down 5x
+      transform: scale($scaledown); // scaled down 5x
+      transform-origin: top center;
     }
   }
 
@@ -156,8 +159,6 @@
     display: none;
   }
 </style>
-
-<svelte:window bind:innerWidth={windowWidth} bind:innerHeight={windowHeight} />
 
 {#if scrollList.length}
   <div
@@ -172,9 +173,7 @@
           {new Date(forecast.dt * 1000).toLocaleTimeString(undefined, {
             timeStyle: 'short'
           })}
-          <div
-            class="cloud"
-            style="filter:brightness({cloudBrightness});left:-{cloudData[columnsRemovedFromBeginning + index].baseCloudBall}px">
+          <div class="cloud" style="filter:brightness({cloudBrightness});">
             <img
               src={cloudData[columnsRemovedFromBeginning + index].img}
               alt="cloud" />

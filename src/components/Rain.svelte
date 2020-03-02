@@ -24,10 +24,12 @@
 </script>
 
 <style type="text/scss">
+  @import "../variables.scss";
+
   .rain {
     overflow: hidden;
     position: absolute;
-    top: 65%;
+    top: 65% * $scaledown;
     left: 50%;
     width: 180px;
     height: 40vh;

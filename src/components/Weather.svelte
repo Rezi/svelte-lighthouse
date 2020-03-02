@@ -12,6 +12,7 @@
   import Stars from "./Stars.svelte";
   import Ground from "./Ground.svelte";
   import WeatherColumns from "./Weather-columns.svelte";
+  import Statlines from "./Statlines.svelte";
 
   const forecastUrl =
     "https://api.openweathermap.org/data/2.5/forecast?q=_city_&APPID=a77e1d2fcad267b4ba535bd5fd05b6e7";
@@ -29,6 +30,10 @@
   let skyTopHsl;
   let skyBottomHsl;
   let skyHalo;
+  let statToggleTypeEvent;
+
+  let windowWidth;
+  let windowHeight;
 
   let scrollDate = new Date();
 
@@ -101,6 +106,9 @@
     const { sunDegAngle, animationKey } = sunData.detail;
     colors(sunDegAngle, animationKey);
   }
+  function onStatToggle(event) {
+    statToggleTypeEvent = event;
+  }
 
   function colors(sunAngleDeg, animationKey) {
     if (animationKey && locals) {
@@ -170,6 +178,8 @@
   }
 </style>
 
+<svelte:window bind:innerWidth={windowWidth} bind:innerHeight={windowHeight} />
+
 <svg class="svg-def">
   <defs>
     <filter id="strokeGlow" y="-10" x="-10" width="1000" height="1000">
@@ -199,7 +209,6 @@
     isMobile={locals.isMobile}
     coords={locals.dataSet ? locals.dataSet.city.coord : null} />
 
-  <DateTime {scrollDate} {activeForecast} />
 </div>
 
 <Ground {groundBottomHsl} {groundTopHsl} />
@@ -211,6 +220,16 @@
     {scrollLeftPx}
     {locals}
     {animationKey}
-    {cloudBrightness} />
+    {cloudBrightness}
+    {windowWidth}
+    {windowHeight} />
+
+  <Statlines
+    {windowHeight}
+    {locals}
+    columnWidth={locals.columnWidth}
+    {statToggleTypeEvent} />
 
 </div>
+
+<DateTime {scrollDate} {activeForecast} on:statToggle={onStatToggle} />

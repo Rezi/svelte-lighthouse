@@ -69,6 +69,6 @@
     </span>
   </div>
   {#if activeForecast}
-    <ForecastStats {activeForecast} />
+    <ForecastStats {activeForecast} on:statToggle />
   {/if}
 </div>

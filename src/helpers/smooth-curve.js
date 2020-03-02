@@ -1,17 +1,6 @@
 // The smoothing ratio
 const smoothing = 0.2;
 
-const points = [
-  [5, 10],
-  [10, 40],
-  [40, 30],
-  [60, 5],
-  [90, 45],
-  [120, 10],
-  [150, 45],
-  [200, 10]
-];
-
 // Properties of a line
 // I:  - pointA (array) [x,y]: coordinates
 //     - pointB (array) [x,y]: coordinates
@@ -80,9 +69,31 @@ const svgPath = (points, command) => {
       i === 0 ? `M ${point[0]},${point[1]}` : `${acc} ${command(point, i, a)}`,
     ""
   );
-  return `<path d="${d}" fill="none" stroke="grey" />`;
+  return d;
 };
 
-const svg = document.querySelector(".svg");
+export function getPath(locals, type, kelvins, graphHeight, columnWidth) {
+  const list = locals.dataSet.list;
+  const values = list.map(item => {
+    let val = item.main[type];
+    if (type === "temp") {
+      val -= kelvins;
+    }
 
-svg.innerHTML = svgPath(points, bezierCommand);
+    return val;
+  });
+
+  const min = Math.min(...values);
+  const max = Math.max(...values).toFixed(1);
+  const adjustedMax = max - min;
+
+  const points = values.map((value, index) => {
+    // adjusted value from 0 to 1
+    const adjustedValue = 1 - (value - min) / adjustedMax;
+    const yCoord = adjustedValue * graphHeight;
+    const xCoord = columnWidth * index;
+    return [xCoord, yCoord];
+  });
+
+  return svgPath(points, bezierCommand);
+}

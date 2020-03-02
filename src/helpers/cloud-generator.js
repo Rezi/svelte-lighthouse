@@ -37,6 +37,7 @@ export function generateCloud(
   columnWidth = columnWidth / scaleDown;
   columnHeight = columnHeight / scaleDown;
   baseCloudBall = baseCloudBall / scaleDown;
+
   if (!clouds) {
     // return 1x1 transparent image
     return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
@@ -45,6 +46,7 @@ export function generateCloud(
 
   const maxCloudHeight = columnHeight / 3;
   const height = (maxCloudHeight * clouds) / 100;
+
   canvas.width = width + baseCloudBall;
   canvas.height = height + baseCloudBall;
   const ctx = canvas.getContext("2d");
