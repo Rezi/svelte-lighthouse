@@ -5,8 +5,7 @@
   "scripts": {
     "dev": "sapper dev",
     "build": "sapper build --legacy",
-    "export": "sapper export --legacy",
-    "export-workers": " rollup --config rollup.worker.config.js && sapper export && serve __sapper__/export",
+    "export": "rollup --config rollup.worker.config.js && sapper export && serve __sapper__/export",
     "start": "node __sapper__/build",
     "cy:run": "cypress run",
     "cy:open": "cypress open",
