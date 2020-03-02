@@ -2,49 +2,35 @@
   import { sunCalc } from "../helpers/suncalc";
   import { forecastMock } from "../helpers/mock";
   import { onMount } from "svelte";
-  import { generateCloud } from "../helpers/cloud-generator";
   import { getColors } from "../helpers/colors";
   import { memoize, isMobileDevice } from "../helpers/helpers";
-  import ForecastStats from "./Forecast-stats.svelte";
 
+  import WeatherBg from "./Weather-bg.svelte";
+  import DateTime from "./Date-time.svelte";
   import Moon from "./Moon.svelte";
   import Sun from "./Sun.svelte";
   import Stars from "./Stars.svelte";
-  import Rain from "./Rain.svelte";
   import Ground from "./Ground.svelte";
+  import WeatherColumns from "./Weather-columns.svelte";
 
   const forecastUrl =
     "https://api.openweathermap.org/data/2.5/forecast?q=_city_&APPID=a77e1d2fcad267b4ba535bd5fd05b6e7";
 
-  let canvas;
-  let cloudData = [];
-  let columnsRemovedFromBeginning = 0;
-
-  let windowWidth;
-  let windowHeight;
   let animationKey = true;
 
-  let moonOpacity01To1;
-
-  let beforePadding = 0;
-  let afterPadding = 0;
+  let scrollLeftPx;
   let activeForecast;
 
+  let starsOpacity0To1 = 0;
+  let moonOpacity01To1;
   let groundTopHsl;
   let groundBottomHsl;
   let cloudBrightness;
-
   let skyTopHsl;
   let skyBottomHsl;
   let skyHalo;
 
   let scrollDate = new Date();
-  let scrollList = [];
-
-  let date;
-  let day;
-
-  let starsOpacity0To1 = 0;
 
   let locals = {
     scrollFromLeft: 0,
@@ -56,18 +42,7 @@
     scrollLeftGrouped: 0
   };
 
-  const memoizedCloudGenerator = memoize(generateCloud);
   const memoizedColors = memoize(getColors);
-
-  const days = [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday"
-  ];
 
   onMount(() => {
     locals.isMobile = isMobileDevice();
@@ -81,7 +56,6 @@
         return { ...forecast, rainSnow, fallType };
       });
       activeForecast = locals.dataSet.list[0];
-      scrollList = []; // add just three column to the list so we can measure the width of it
 
       const defaultValues = setDefaultValues(data);
       locals = { ...locals, ...defaultValues };
@@ -119,6 +93,15 @@
     return { nearestForecastDate, prevMoonPhase };
   }
 
+  function onSetActiveForecast(forecast) {
+    activeForecast = forecast.detail;
+  }
+
+  function onSunDegChanged(sunData) {
+    const { sunDegAngle, animationKey } = sunData.detail;
+    colors(sunDegAngle, animationKey);
+  }
+
   function colors(sunAngleDeg, animationKey) {
     if (animationKey && locals) {
       const responseColors = memoizedColors(locals, sunAngleDeg);
@@ -143,96 +126,7 @@
     scrollDate = new Date(
       locals.nearestForecastDate.getTime() + onePxInMs * scrollLeft
     );
-
-    if (animationKey) {
-      const numberOfItems = locals.dataSet.list.length;
-
-      const defaultSidePadding = windowWidth / 2 - locals.columnWidth / 2;
-      let leftEdgeScrolled =
-        scrollLeft - defaultSidePadding < 0
-          ? 0
-          : scrollLeft - defaultSidePadding;
-
-      let activeItemNo = Math.floor(
-        (scrollLeft -
-          defaultSidePadding +
-          windowWidth / 2 +
-          locals.columnWidth / 2) /
-          locals.columnWidth
-      );
-
-      if (activeItemNo > numberOfItems) {
-        activeItemNo = numberOfItems - 1;
-      }
-
-      activeForecast = locals.dataSet.list[activeItemNo - 1];
-
-      columnsRemovedFromBeginning = Math.floor(
-        leftEdgeScrolled / locals.columnWidth
-      );
-
-      beforePadding =
-        leftEdgeScrolled -
-        (leftEdgeScrolled % locals.columnWidth) +
-        defaultSidePadding;
-
-      let itemsPassed =
-        (windowWidth + scrollLeft - defaultSidePadding) / locals.columnWidth;
-
-      if (itemsPassed > numberOfItems) {
-        itemsPassed = numberOfItems;
-      }
-
-      const noOfColumnsActive = itemsPassed - columnsRemovedFromBeginning;
-
-      afterPadding =
-        (numberOfItems - noOfColumnsActive - columnsRemovedFromBeginning) *
-          locals.columnWidth +
-        defaultSidePadding;
-
-      let sliceEnd = noOfColumnsActive + columnsRemovedFromBeginning + 1;
-      if (sliceEnd > numberOfItems + 1) {
-        sliceEnd = numberOfItems + 1;
-      }
-      scrollList = locals.dataSet.list.slice(
-        columnsRemovedFromBeginning,
-        sliceEnd
-      );
-
-      const maxSliceEnd = sliceEnd >= numberOfItems ? numberOfItems : sliceEnd;
-
-      for (let i = columnsRemovedFromBeginning; i < maxSliceEnd; i++) {
-        const forecast = locals.dataSet.list[i];
-        const baseCloudBall =
-          (windowHeight * Math.pow(forecast.clouds.all || 0, 0.6)) / 100;
-
-        cloudData[i] = {
-          baseCloudBall,
-          img: memoizedCloudGenerator(
-            i,
-            canvas,
-            locals.columnWidth,
-            windowHeight,
-            baseCloudBall,
-            forecast.clouds.all,
-            (forecast.rain && forecast.rain["3h"]) || 0,
-            (forecast.snow && forecast.snow["3h"]) || 0
-          )
-        };
-      }
-
-      const newDay = days[scrollDate.getDay()];
-
-      if (day !== newDay) {
-        day = newDay;
-        date = scrollDate.toLocaleDateString();
-      }
-    }
-  }
-
-  function sunDegChanged(sunData) {
-    const { sunDegAngle, animationKey } = sunData.detail;
-    colors(sunDegAngle, animationKey);
+    scrollLeftPx = locals.scrollFromLeft;
   }
 
   const fetchForecast = async city => {
@@ -259,15 +153,12 @@
     height: 0;
   }
 
-  .weather-bg-radial {
-    height: 100vh;
-  }
-
-  .weather-bg {
+  .space {
+    position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
-    position: fixed;
+    height: 100vh;
   }
 
   .weather-scroll {
@@ -277,75 +168,7 @@
     width: 100%;
     position: relative;
   }
-
-  .weather-columns-wrap {
-    overflow: hidden;
-    display: flex;
-    height: 100vh;
-    position: relative;
-  }
-  .weather-column {
-    flex: 1 0 180px;
-
-    &.active {
-      .forecast:after {
-        content: "";
-        width: 0;
-        height: 0;
-        border-style: solid;
-        border-width: 14px 20px 0 20px;
-        border-color: #f5deb317 transparent transparent transparent;
-        position: absolute;
-        top: 0;
-        left: 50%;
-        transform: translate(-50%, -100%);
-      }
-    }
-
-    .forecast {
-      font-size: 1.2rem;
-      position: relative;
-      top: calc(25vh + 5rem);
-      text-align: center;
-      color: $colorBase;
-    }
-  }
-  .date-time {
-    position: absolute;
-    top: 4vh;
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
-    color: $colorBase;
-    width: 100%;
-
-    .day {
-      font-size: 2rem;
-    }
-
-    .date {
-      font-size: 1rem;
-    }
-
-    .separator {
-      color: rgb(49, 49, 49);
-    }
-    .realtime {
-      padding-left: 0.3rem;
-      font-size: 2rem;
-    }
-  }
-
-  .cloud {
-    position: absolute;
-  }
-
-  .canvas {
-    display: none;
-  }
 </style>
-
-<svelte:window bind:innerWidth={windowWidth} bind:innerHeight={windowHeight} />
 
 <svg class="svg-def">
   <defs>
@@ -362,74 +185,32 @@
   </defs>
 </svg>
 
-<div
-  class="weather-bg weather-bg-linear"
-  style="background: linear-gradient( 0deg, {skyBottomHsl} 0%, {skyTopHsl} 100%
-  );">
-  <div
-    class="weather-bg-radial"
-    style="background: radial-gradient( circle at 20% 25%, rgba(0, 0, 0, 0) 0%, {skyHalo}
-    100% );">
+<WeatherBg {skyBottomHsl} {skyTopHsl} {skyHalo} />
 
-    <Stars {starsOpacity0To1} />
+<div class="space">
+  <Stars {starsOpacity0To1} />
 
-    <Moon {scrollDate} {animationKey} {locals} {moonOpacity01To1} />
+  <Moon {scrollDate} {animationKey} {locals} {moonOpacity01To1} />
 
-    <Sun
-      {scrollDate}
-      {animationKey}
-      isMobile={locals.isMobile}
-      coords={locals.dataSet ? locals.dataSet.city.coord : null}
-      on:sunDegChanged={sunDegChanged} />
+  <Sun
+    on:sunDegChanged={onSunDegChanged}
+    {scrollDate}
+    {animationKey}
+    isMobile={locals.isMobile}
+    coords={locals.dataSet ? locals.dataSet.city.coord : null} />
 
-    <div class="date-time">
-      <div class="day">{day}</div>
-      <div class="date">
-        {date}
-        <span class="realtime">
-          <span class="separator">|</span>
-          {scrollDate.toLocaleTimeString(undefined, { timeStyle: 'short' })}
-        </span>
-      </div>
-      {#if scrollList.length}
-        <ForecastStats {activeForecast} />
-      {/if}
-    </div>
-
-  </div>
+  <DateTime {scrollDate} {activeForecast} />
 </div>
 
 <Ground {groundBottomHsl} {groundTopHsl} />
 
 <div class="weather-scroll" on:scroll={weatherScroll}>
-  {#if scrollList.length}
-    <div
-      class="weather-columns-wrap"
-      style="width:{scrollList.length * locals.columnWidth}px;padding-left:{beforePadding}px;padding-right:{afterPadding}px">
 
-      {#each scrollList as forecast, index (forecast.dt)}
-        <div
-          class="weather-column"
-          class:active={activeForecast.dt === forecast.dt}>
-          <div class="forecast">
-            {new Date(forecast.dt * 1000).toLocaleTimeString(undefined, {
-              timeStyle: 'short'
-            })}
-            <div
-              class="cloud"
-              style="filter:brightness({cloudBrightness});left:-{cloudData[columnsRemovedFromBeginning + index].baseCloudBall}px">
-              <img
-                src={cloudData[columnsRemovedFromBeginning + index].img}
-                alt="cloud" />
+  <WeatherColumns
+    on:setActiveForecast={onSetActiveForecast}
+    {scrollLeftPx}
+    {locals}
+    {animationKey}
+    {cloudBrightness} />
 
-              <Rain intensity={forecast.rainSnow} type={forecast.fallType} />
-            </div>
-          </div>
-        </div>
-      {/each}
-
-    </div>
-  {/if}
 </div>
-
-<canvas class="canvas" bind:this={canvas} width="800" height="800" />

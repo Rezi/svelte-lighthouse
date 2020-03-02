@@ -31,8 +31,12 @@ export function generateCloud(
   baseCloudBall,
   clouds = 0,
   rain = 0,
-  snow = 0
+  snow = 0,
+  scaleDown
 ) {
+  columnWidth = columnWidth / scaleDown;
+  columnHeight = columnHeight / scaleDown;
+  baseCloudBall = baseCloudBall / scaleDown;
   if (!clouds) {
     // return 1x1 transparent image
     return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
