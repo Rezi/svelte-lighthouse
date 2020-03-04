@@ -83,7 +83,7 @@
   <div class="moon-bg" />
   <svg class="moon-svg" viewBox="0 0 32 32">
     <path
-      class:glow-filter={!locals.isMobile}
+      class:glow-filter={!locals.disableGlow}
       d="M16.034 21.918c{moonLeft} 0.000 {moonLeft} -11.743 0-11.741 {moonRight}
       0.023 {moonRight} 11.743 0 11.741z" />
   </svg>

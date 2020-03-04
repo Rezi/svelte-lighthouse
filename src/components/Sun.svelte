@@ -6,7 +6,7 @@
   export let scrollDate;
   export let animationKey;
   export let coords;
-  export let isMobile;
+  export let disableGlow;
 
   let sunBottomPosition = 0;
   let sunLeftPosition = 0;
@@ -64,7 +64,7 @@
   style="transform: translate({sunLeftPosition}vw,-{sunBottomPosition}) rotate({sunLeftPosition * -7}deg)">
   <svg class="sun-svg" viewBox="0 0 32 32">
     <path
-      class:glow-filter={!isMobile}
+      class:glow-filter={!disableGlow}
       d="M13.795 18.232c0.217 0.24 0.271 0.542 0.121 0.678l-1.082 0.98c-0.15
       0.136-0.445
       0.052-0.662-0.188s-0.271-0.542-0.121-0.678l1.082-0.98c0.15-0.136

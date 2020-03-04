@@ -40,7 +40,7 @@
   let locals = {
     scrollFromLeft: 0,
     dataSet: null,
-    isMobile: false,
+    disableGlow: true,
     columnWidth: 180,
     prevMoonPhase: null,
     nearestForecastDate: null,
@@ -50,7 +50,7 @@
   const memoizedColors = memoize(getColors);
 
   onMount(() => {
-    locals.isMobile = isMobileDevice();
+    // locals.disableGlow = isMobileDevice();
     fetchForecast("Hlavní město Praha").then(data => {
       locals.dataSet = data;
       locals.dataSet.list = locals.dataSet.list.map(forecast => {
@@ -206,7 +206,7 @@
     on:sunDegChanged={onSunDegChanged}
     {scrollDate}
     {animationKey}
-    isMobile={locals.isMobile}
+    disableGlow={locals.disableGlow}
     coords={locals.dataSet ? locals.dataSet.city.coord : null} />
 
 </div>

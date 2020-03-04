@@ -23,90 +23,102 @@
   const memoizedCloudGenerator = memoize(generateCloud);
   const dispatch = createEventDispatcher();
 
+  const countOnScrollFrame = countOnScrollFrameClosure();
   $: countOnScrollFrame(scrollLeftPx, animationKey, locals);
 
-  function countOnScrollFrame(scrollLeft, animate, locals) {
-    if (animate && locals.dataSet) {
-      const numberOfItems = locals.dataSet.list.length;
+  function countOnScrollFrameClosure() {
+    let previousColumnsRemovedFromBeginning = null;
+    return function(scrollLeft, animate, locals) {
+      if (animate && locals.dataSet) {
+        const numberOfItems = locals.dataSet.list.length;
 
-      const defaultSidePadding = windowWidth / 2 - locals.columnWidth / 2;
+        const defaultSidePadding = windowWidth / 2 - locals.columnWidth / 2;
 
-      const leftEdgeScrolled =
-        scrollLeft - defaultSidePadding < 0
-          ? 0
-          : scrollLeft - defaultSidePadding;
+        const leftEdgeScrolled =
+          scrollLeft - defaultSidePadding < 0
+            ? 0
+            : scrollLeft - defaultSidePadding;
 
-      let activeItemNo = Math.floor(
-        (scrollLeft -
-          defaultSidePadding +
-          windowWidth / 2 +
-          locals.columnWidth / 2) /
-          locals.columnWidth
-      );
+        let activeItemNo = Math.floor(
+          (scrollLeft -
+            defaultSidePadding +
+            windowWidth / 2 +
+            locals.columnWidth / 2) /
+            locals.columnWidth
+        );
 
-      if (activeItemNo > numberOfItems) {
-        activeItemNo = numberOfItems - 1;
-      }
+        if (activeItemNo > numberOfItems) {
+          activeItemNo = numberOfItems - 1;
+        }
 
-      activeForecast = locals.dataSet.list[activeItemNo - 1];
-      dispatch("setActiveForecast", activeForecast);
+        activeForecast = locals.dataSet.list[activeItemNo - 1];
+        dispatch("setActiveForecast", activeForecast);
 
-      columnsRemovedFromBeginning = Math.floor(
-        leftEdgeScrolled / locals.columnWidth
-      );
+        columnsRemovedFromBeginning = Math.floor(
+          leftEdgeScrolled / locals.columnWidth
+        );
 
-      beforePadding =
-        leftEdgeScrolled -
-        (leftEdgeScrolled % locals.columnWidth) +
-        defaultSidePadding;
+        beforePadding =
+          leftEdgeScrolled -
+          (leftEdgeScrolled % locals.columnWidth) +
+          defaultSidePadding;
 
-      let itemsPassed =
-        (windowWidth + scrollLeft - defaultSidePadding) / locals.columnWidth;
+        let itemsPassed =
+          (windowWidth + scrollLeft - defaultSidePadding) / locals.columnWidth;
 
-      if (itemsPassed > numberOfItems) {
-        itemsPassed = numberOfItems;
-      }
+        if (itemsPassed > numberOfItems) {
+          itemsPassed = numberOfItems;
+        }
 
-      const noOfColumnsActive = itemsPassed - columnsRemovedFromBeginning;
+        const noOfColumnsActive = itemsPassed - columnsRemovedFromBeginning;
 
-      afterPadding =
-        (numberOfItems - noOfColumnsActive - columnsRemovedFromBeginning) *
-          locals.columnWidth +
-        defaultSidePadding;
+        afterPadding =
+          (numberOfItems - noOfColumnsActive - columnsRemovedFromBeginning) *
+            locals.columnWidth +
+          defaultSidePadding;
 
-      let sliceEnd = noOfColumnsActive + columnsRemovedFromBeginning + 1;
-      if (sliceEnd > numberOfItems + 1) {
-        sliceEnd = numberOfItems + 1;
-      }
+        let sliceEnd = noOfColumnsActive + columnsRemovedFromBeginning + 1;
+        if (sliceEnd > numberOfItems + 1) {
+          sliceEnd = numberOfItems + 1;
+        }
 
-      scrollList = locals.dataSet.list.slice(
-        columnsRemovedFromBeginning,
-        sliceEnd
-      );
+        if (
+          previousColumnsRemovedFromBeginning === columnsRemovedFromBeginning
+        ) {
+          return;
+        }
 
-      const maxSliceEnd = sliceEnd >= numberOfItems ? numberOfItems : sliceEnd;
+        previousColumnsRemovedFromBeginning = columnsRemovedFromBeginning;
 
-      for (let i = columnsRemovedFromBeginning; i < maxSliceEnd; i++) {
-        const forecast = locals.dataSet.list[i];
-        const baseCloudBall =
-          (windowHeight * Math.pow(forecast.clouds.all || 0, 0.6)) / 100;
+        scrollList = locals.dataSet.list.slice(
+          columnsRemovedFromBeginning,
+          sliceEnd
+        );
 
-        cloudData[i] = {
-          baseCloudBall,
-          img: memoizedCloudGenerator(
-            i,
-            canvas,
-            locals.columnWidth,
-            windowHeight,
+        const maxSliceEnd =
+          sliceEnd >= numberOfItems ? numberOfItems : sliceEnd;
+
+        for (let i = columnsRemovedFromBeginning; i < maxSliceEnd; i++) {
+          const forecast = locals.dataSet.list[i];
+          const baseCloudBall =
+            (windowHeight * Math.pow(forecast.clouds.all || 0, 0.6)) / 100;
+          cloudData[i] = {
             baseCloudBall,
-            forecast.clouds.all,
-            (forecast.rain && forecast.rain["3h"]) || 0,
-            (forecast.snow && forecast.snow["3h"]) || 0,
-            downscaled // scaled down 5x
-          )
-        };
+            img: memoizedCloudGenerator(
+              i,
+              canvas,
+              locals.columnWidth,
+              windowHeight,
+              baseCloudBall,
+              forecast.clouds.all,
+              (forecast.rain && forecast.rain["3h"]) || 0,
+              (forecast.snow && forecast.snow["3h"]) || 0,
+              downscaled // scaled down 5x
+            )
+          };
+        }
       }
-    }
+    };
   }
 </script>
 
@@ -119,6 +131,7 @@
     height: 100vh;
     position: relative;
   }
+
   .weather-column {
     flex: 1 0 180px;
 
