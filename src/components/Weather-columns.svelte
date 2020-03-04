@@ -77,7 +77,7 @@
             locals.columnWidth +
           defaultSidePadding;
 
-        let sliceEnd = noOfColumnsActive + columnsRemovedFromBeginning + 1;
+        let sliceEnd = noOfColumnsActive + columnsRemovedFromBeginning + 2;
         if (sliceEnd > numberOfItems + 1) {
           sliceEnd = numberOfItems + 1;
         }
@@ -130,6 +130,7 @@
     display: flex;
     height: 100vh;
     position: relative;
+    transform: translateY(1px);
   }
 
   .weather-column {
