@@ -15,7 +15,7 @@
 
   function showStats(type) {
     statToggled[type] = !statToggled[type];
-    dispatch("statToggle", { type, show: statToggled[type] });
+    dispatch("statToggle", statToggled);
   }
 </script>
 

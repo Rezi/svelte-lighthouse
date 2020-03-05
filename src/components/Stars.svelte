@@ -28,12 +28,19 @@
   }
 </style>
 
+<svg>
+  <defs>
+    <path
+      id="sky-star"
+      d="M21.557 14.914l-3.635-0.528-1.625-3.293-1.625 3.293-3.635 0.528 2.63
+      2.564-0.621 3.62 3.251-1.709 3.251 1.709-0.621-3.62z" />
+  </defs>
+</svg>
+
 <div class="stars" style="opacity:{starsOpacity0To1}">
   {#each stars as starStyle}
     <svg class="star" viewBox="0 0 32 32" style={starStyle}>
-      <path
-        d="M21.557 14.914l-3.635-0.528-1.625-3.293-1.625 3.293-3.635 0.528 2.63
-        2.564-0.621 3.62 3.251-1.709 3.251 1.709-0.621-3.62z" />
+      <use xlink:href="#sky-star" />
     </svg>
   {/each}
 </div>

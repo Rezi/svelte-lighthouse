@@ -1,5 +1,18 @@
 <script>
-  import Weather from "../components/Weather.svelte";
+  let value;
+
+  $: fetchCities(value);
+
+  async function fetchCities(value) {
+    if (value) {
+      const response = await fetch(
+        `https://openweathermap.org/data/2.5/find?q=${value}&type=like&sort=population&cnt=30&appid=b6907d289e10d714a6e88b30761fae22&_=1583447022166`
+      );
+      const data = await response.json();
+
+      console.log(data);
+    }
+  }
 </script>
 
 <style>
@@ -15,4 +28,4 @@
   <link rel="dns-prefetch" href="//api.openweathermap.org" />
 </svelte:head>
 
-<Weather />
+<input type="text" bind:value />

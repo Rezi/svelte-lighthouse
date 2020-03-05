@@ -75,9 +75,17 @@ const svgPath = (points, command) => {
 export function getPath(locals, type, kelvins, graphHeight, columnWidth) {
   const list = locals.dataSet.list;
   const values = list.map(item => {
-    let val = item.main[type];
+    let val = item.main[type]; // humidity set here
     if (type === "temp") {
       val -= kelvins;
+    } else if (type === "pressure") {
+      val = item.main["grnd_level"];
+    } else if (type === "clouds") {
+      val = item.clouds.all;
+    } else if (type === "rainsnow") {
+      val = item.rain ? item.rain["3h"] : item.snow ? item.snow["3h"] : 0;
+    } else if (type === "wind") {
+      val = item.wind ? item.wind.speed : 0;
     }
 
     return val;

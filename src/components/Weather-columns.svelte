@@ -188,11 +188,14 @@
             timeStyle: 'short'
           })}
           <div class="cloud" style="filter:brightness({cloudBrightness});">
-            <img
-              src={cloudData[columnsRemovedFromBeginning + index].img}
-              alt="cloud" />
-
-            <Rain intensity={forecast.rainSnow} type={forecast.fallType} />
+            {#if cloudData[columnsRemovedFromBeginning + index].img}
+              <img
+                src={cloudData[columnsRemovedFromBeginning + index].img}
+                alt="cloud" />
+            {/if}
+            {#if forecast.rainSnow}
+              <Rain intensity={forecast.rainSnow} type={forecast.fallType} />
+            {/if}
           </div>
         </div>
       </div>
