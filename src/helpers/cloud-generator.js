@@ -32,7 +32,7 @@ export function generateCloud(
   clouds = 0,
   rain = 0,
   snow = 0,
-  scaleDown
+  scaleDown = 1
 ) {
   columnWidth = columnWidth / scaleDown;
   columnHeight = columnHeight / scaleDown;
