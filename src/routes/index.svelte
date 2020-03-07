@@ -109,7 +109,8 @@
     position: absolute;
     top: 10vh;
     font-size: 5vh;
-    font-family: "Kalam", cursive;
+    /* font-family: "Kalam", cursive; */
+    font-family: "Comic Sans MS";
     color: $color-app-name;
     padding: 0 5vw;
     text-align: center;
@@ -188,11 +189,11 @@
     content="A weather forecast app, in which you just see the weather" />
   <link rel="preconnect" href="//api.openweathermap.org" />
   <link rel="dns-prefetch" href="//api.openweathermap.org" />
-  <link rel="preconnect" href="//fonts.googleapis.com" />
+  <!--   <link rel="preconnect" href="//fonts.googleapis.com" />
   <link rel="dns-prefetch" href="//fonts.googleapis.com" />
   <link
     href="https://fonts.googleapis.com/css?family=Kalam&display=swap"
-    rel="stylesheet" />
+    rel="stylesheet" /> -->
 </svelte:head>
 
 <section class="search">
