@@ -7,8 +7,8 @@
 
 <script>
   import Weather from "../components/Weather.svelte";
-  export let city;
-  export let id;
+  export let city = "prague";
+  export let id = "3067696";
 </script>
 
 <style>
