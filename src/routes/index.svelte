@@ -21,7 +21,6 @@
       const data = await response.json();
       if (data.list) {
         cities = data.list;
-        console.log(cities);
       } else {
         cities = [];
       }
@@ -44,16 +43,25 @@
 
   function addCity(city, event) {
     if (isBrowser()) {
-      const oldCities = JSON.parse(localStorage.getItem("cities"));
-      const citiesStore = [
-        { name: city.name, id: city.id, sys: { country: city.sys.country } }
-      ];
+      let oldCities = JSON.parse(localStorage.getItem("cities"));
+      const newCity = {
+        name: city.name,
+        id: city.id,
+        sys: { country: city.sys.country }
+      };
 
-      if (oldCities) {
-        citiesStore.push(...oldCities);
+      if (
+        oldCities &&
+        !oldCities.find(oldCity => {
+          return oldCity.id === city.id;
+        })
+      ) {
+        oldCities.push(newCity);
+      } else if (!oldCities || !oldCities.length) {
+        oldCities = [newCity];
       }
 
-      localStorage.setItem("cities", JSON.stringify(citiesStore));
+      localStorage.setItem("cities", JSON.stringify(oldCities));
     }
   }
 
