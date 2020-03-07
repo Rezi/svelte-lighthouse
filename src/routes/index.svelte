@@ -1,5 +1,6 @@
 <script>
   import { generateCloud } from "../helpers/cloud-generator";
+  import { isBrowser } from "../helpers/helpers";
   import { onMount } from "svelte";
 
   let value;
@@ -28,6 +29,7 @@
   }
 
   onMount(() => {
+    cities = JSON.parse(localStorage.getItem("cities")) || [];
     const cloudBallSize = Math.min(windowWidth, windowHeight) / 3;
 
     cloudURI = generateCloud(
@@ -39,10 +41,42 @@
       90
     );
   });
+
+  function addCity(city, event) {
+    if (isBrowser()) {
+      const oldCities = JSON.parse(localStorage.getItem("cities"));
+      const citiesStore = [
+        { name: city.name, id: city.id, sys: { country: city.sys.country } }
+      ];
+
+      if (oldCities) {
+        citiesStore.push(...oldCities);
+      }
+
+      localStorage.setItem("cities", JSON.stringify(citiesStore));
+    }
+  }
+
+  function deleteCity(city, event) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (isBrowser()) {
+      const oldCities = JSON.parse(localStorage.getItem("cities"));
+      cities = oldCities.filter(oldCity => {
+        return oldCity.id !== city.id;
+      });
+
+      localStorage.setItem("cities", JSON.stringify(cities));
+    }
+  }
 </script>
 
 <style type="text/scss">
   @import "../variables.scss";
+
+  :global(html) {
+    background-color: $color-bg-sky-bottom;
+  }
 
   .search {
     width: 100%;
@@ -111,7 +145,6 @@
 
   .search-results {
     margin-top: 2rem;
-    list-style: none;
     padding: 0;
   }
 
@@ -119,13 +152,18 @@
     font-size: 1.5rem;
     margin-bottom: 1rem;
     color: $color-search;
-    cursor: pointer;
     display: flex;
     justify-content: space-between;
+    text-decoration: none;
   }
 
   .temperature {
     color: $color-temperature;
+  }
+
+  .delete {
+    fill: currentColor;
+    width: 1.5rem;
   }
 
   .canvas {
@@ -149,7 +187,7 @@
     rel="stylesheet" />
 </svelte:head>
 
-<div class="search">
+<section class="search">
   <div class="cloud-wrap">
     <img src={cloudURI} alt="cloud" class="cloud-image" />
     <div class="app-name">The Weather App</div>
@@ -161,19 +199,52 @@
         <input class="search-input" type="text" bind:value />
       </label>
 
-      <ul class="search-results">
+      <div class="search-results">
         {#each cities as city}
-          <li class="search-results--item">
-            <span>{city.name}</span>
-            <span class="temperature">
-              {(city.main.temp - 272.15).toFixed(1)}°C
-            </span>
-          </li>
+          <a
+            on:click={event => {
+              addCity(city, event);
+            }}
+            class="search-results--item"
+            href="forecast?city={city.name}&id={city.id}">
+            <span>{city.name} ({city.sys.country})</span>
+            {#if city.main}
+              <span class="temperature">
+                {(city.main.temp - 272.15).toFixed(1)}°C
+              </span>
+            {:else}
+              <svg
+                class="delete"
+                viewBox="0 0 22 28"
+                on:click={event => {
+                  deleteCity(city, event);
+                }}>
+                <title>delete</title>
+                <path
+                  d="M8 11.5v9c0 0.281-0.219 0.5-0.5 0.5h-1c-0.281
+                  0-0.5-0.219-0.5-0.5v-9c0-0.281 0.219-0.5 0.5-0.5h1c0.281 0 0.5
+                  0.219 0.5 0.5zM12 11.5v9c0 0.281-0.219 0.5-0.5 0.5h-1c-0.281
+                  0-0.5-0.219-0.5-0.5v-9c0-0.281 0.219-0.5 0.5-0.5h1c0.281 0 0.5
+                  0.219 0.5 0.5zM16 11.5v9c0 0.281-0.219 0.5-0.5 0.5h-1c-0.281
+                  0-0.5-0.219-0.5-0.5v-9c0-0.281 0.219-0.5 0.5-0.5h1c0.281 0 0.5
+                  0.219 0.5 0.5zM18 22.813v-14.812h-14v14.812c0 0.75 0.422 1.188
+                  0.5 1.188h13c0.078 0 0.5-0.438 0.5-1.188zM7.5
+                  6h7l-0.75-1.828c-0.047-0.063-0.187-0.156-0.266-0.172h-4.953c-0.094
+                  0.016-0.219 0.109-0.266 0.172zM22 6.5v1c0 0.281-0.219 0.5-0.5
+                  0.5h-1.5v14.812c0 1.719-1.125 3.187-2.5 3.187h-13c-1.375
+                  0-2.5-1.406-2.5-3.125v-14.875h-1.5c-0.281
+                  0-0.5-0.219-0.5-0.5v-1c0-0.281 0.219-0.5
+                  0.5-0.5h4.828l1.094-2.609c0.313-0.766 1.25-1.391
+                  2.078-1.391h5c0.828 0 1.766 0.625 2.078 1.391l1.094
+                  2.609h4.828c0.281 0 0.5 0.219 0.5 0.5z" />
+              </svg>
+            {/if}
+          </a>
         {/each}
-      </ul>
+      </div>
     </div>
   </div>
 
-</div>
+</section>
 
 <canvas class="canvas" bind:this={canvas} width="800" height="800" />

@@ -13,9 +13,11 @@
   import Ground from "./Ground.svelte";
   import WeatherColumns from "./Weather-columns.svelte";
   import Statlines from "./Statlines.svelte";
+  export let city;
+  export let id;
 
   const forecastUrl =
-    "https://api.openweathermap.org/data/2.5/forecast?q=_city_&APPID=a77e1d2fcad267b4ba535bd5fd05b6e7";
+    "https://api.openweathermap.org/data/2.5/forecast?id=_id_&APPID=a77e1d2fcad267b4ba535bd5fd05b6e7";
 
   let animationKey = true;
 
@@ -51,7 +53,7 @@
 
   onMount(() => {
     // locals.disableGlow = isMobileDevice();
-    fetchForecast("Hlavní město Praha").then(data => {
+    fetchForecast(id).then(data => {
       locals.dataSet = data;
       locals.dataSet.list = locals.dataSet.list.map(forecast => {
         const fallType = forecast.rain ? "rain" : "snow";
@@ -137,8 +139,8 @@
     scrollLeftPx = locals.scrollFromLeft;
   }
 
-  const fetchForecast = async city => {
-    const urlWithCity = forecastUrl.replace("_city_", city);
+  const fetchForecast = async cityId => {
+    const urlWithCity = forecastUrl.replace("_id_", cityId);
     const response = await fetch(urlWithCity);
     const data = await response.json();
     // const data = forecastMock;
@@ -232,4 +234,4 @@
 
 </div>
 
-<DateTime {scrollDate} {activeForecast} on:statToggle={onStatToggle} />
+<DateTime {scrollDate} {activeForecast} on:statToggle={onStatToggle} {city} />

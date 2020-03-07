@@ -1,5 +1,14 @@
+<script context="module">
+  export async function preload(page, session) {
+    const { city, id } = page.query;
+    return { city, id };
+  }
+</script>
+
 <script>
   import Weather from "../components/Weather.svelte";
+  export let city;
+  export let id;
 </script>
 
 <style>
@@ -15,4 +24,4 @@
   <link rel="dns-prefetch" href="//api.openweathermap.org" />
 </svelte:head>
 
-<Weather />
+<Weather {city} {id} />
