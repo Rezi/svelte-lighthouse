@@ -75,7 +75,7 @@
 
   .stat-icon {
     margin-right: 0.5rem;
-    height: 4.5vh;
+    height: 3.5vh;
     max-height: 3rem;
     fill: currentColor;
   }
