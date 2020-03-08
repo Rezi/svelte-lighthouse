@@ -142,8 +142,8 @@
         width: 0;
         height: 0;
         border-style: solid;
-        border-width: 14px 20px 0 20px;
-        border-color: #f5deb317 transparent transparent transparent;
+        border-width: 1rem 1rem 0 1rem;
+        border-color: $color-arrow transparent transparent transparent;
         position: absolute;
         top: 0;
         left: 50%;

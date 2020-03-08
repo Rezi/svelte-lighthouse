@@ -16,7 +16,7 @@
 </style>
 
 <svelte:head>
-  <title>I see Weather</title>
+  <title>The Weather App</title>
   <meta
     name="description"
     content="A weather forecast app, in which you just see the weather" />
