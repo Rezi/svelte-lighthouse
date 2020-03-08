@@ -67,6 +67,10 @@
     padding: 0.5rem 1rem;
     font-size: 1.2rem;
 
+    .city {
+      text-transform: capitalize;
+    }
+
     .nav--item {
       text-decoration: none;
       color: $colorBase;
