@@ -92,8 +92,9 @@ export function getPath(locals, type, kelvins, graphHeight, columnWidth) {
   });
 
   const min = Math.min(...values);
-  const max = Math.max(...values).toFixed(1);
-  const adjustedMax = max - min;
+  const max = Math.max(...values);
+  const maxFixed = max.toFixed(1);
+  const adjustedMax = maxFixed - min;
 
   const points = values.map((value, index) => {
     // adjusted value from 0 to 1
@@ -102,6 +103,8 @@ export function getPath(locals, type, kelvins, graphHeight, columnWidth) {
     const xCoord = columnWidth * index;
     return [xCoord, yCoord];
   });
-
-  return svgPath(points, bezierCommand);
+  const minValue = min % 1 ? min.toFixed(1) : min;
+  const maxValue = max % 1 ? max.toFixed(1) : max;
+  const path = min !== max ? svgPath(points, bezierCommand) : "";
+  return { path, minValue, maxValue };
 }

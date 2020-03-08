@@ -17,17 +17,20 @@
         const graphHeight = windowHeight / 3;
 
         lines = Object.entries(stats)
-          .filter(([key, value]) => value)
+          .filter(([key, value]) => value.active)
           .map(([key, value]) => {
+            const { path, minValue, maxValue } = smoother.getPath(
+              locals,
+              key,
+              kelvins,
+              graphHeight,
+              columnWidth
+            );
             return {
-              path: smoother.getPath(
-                locals,
-                key,
-                kelvins,
-                graphHeight,
-                columnWidth
-              ),
-              name: key
+              path: path,
+              name: key,
+              min: `${minValue} ${value.suffix}`,
+              max: `${maxValue} ${value.suffix}`
             };
           });
       } else {
@@ -39,55 +42,104 @@
 
 <style type="text/scss">
   @import "../variables.scss";
+  $top: 45vh;
+  $height: 33.33333vh;
 
   .stat-line {
     position: absolute;
-    top: 45vh;
+    top: $top;
     left: 50vw;
+
+    .stat-max {
+      top: calc(#{$top} - 2rem);
+    }
+
+    .stat-min {
+      top: calc(#{$top + $height} + 1rem);
+    }
+
+    .stat-max,
+    .stat-min {
+      width: (100vw / 6 * 1);
+      position: fixed;
+      text-align: center;
+    }
   }
 
   .path {
     fill: none;
     stroke-width: 3px;
-    height: 33.33333vh;
+    height: $height;
     overflow: visible;
+    stroke: currentColor;
+    border: 1px dashed currentColor;
+    border-width: 1px 0;
   }
 
   .temp {
-    stroke: $temp;
-  }
+    color: $temp;
 
-  .pressure {
-    stroke: $pressure;
-  }
-
-  .humidity {
-    stroke: $humidity;
-  }
-
-  .clouds {
-    stroke: $clouds;
-  }
-
-  .wind {
-    stroke: $wind;
+    .stat-max,
+    .stat-min {
+      left: 0;
+    }
   }
 
   .rainsnow {
-    stroke: $rainsnow;
+    color: $rainsnow;
+    .stat-max,
+    .stat-min {
+      left: (100vw / 6 * 1);
+    }
+  }
+
+  .pressure {
+    color: $pressure;
+
+    .stat-max,
+    .stat-min {
+      left: (100vw / 6 * 5);
+    }
+  }
+
+  .humidity {
+    color: $humidity;
+    .stat-max,
+    .stat-min {
+      left: (100vw / 6 * 4);
+    }
+  }
+
+  .clouds {
+    color: $clouds;
+    .stat-max,
+    .stat-min {
+      left: (100vw / 6 * 2);
+    }
+  }
+
+  .wind {
+    color: $wind;
+
+    .stat-max,
+    .stat-min {
+      left: (100vw / 6 * 3);
+    }
   }
 </style>
 
 {#if locals.dataSet}
-  {#each lines as { path, name }}
-    <div class="stat-line">
-
+  {#each lines as { path, name, min, max }, index}
+    <div class="stat-line {name}">
+      <div class="stat-max">{max}</div>
       <svg
-        class="path {name}"
+        class="path"
+        style="width:{columnWidth * locals.dataSet.list.length}px"
         viewBox="0 0 {columnWidth * locals.dataSet.list.length}
         {windowHeight / 3}">
         <path d={path} />
       </svg>
+      <div class="stat-min">{min}</div>
     </div>
   {/each}
 {/if}

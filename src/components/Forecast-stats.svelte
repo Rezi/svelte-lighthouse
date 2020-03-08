@@ -5,16 +5,16 @@
 
   const dispatch = createEventDispatcher();
   let statToggled = {
-    temp: false,
-    pressure: false,
-    humidity: false,
-    rainsnow: false,
-    wind: false,
-    clouds: false
+    temp: { active: false, suffix: "°C" },
+    rainsnow: { active: false, suffix: "%" },
+    clouds: { active: false, suffix: "%" },
+    wind: { active: false, suffix: "m/s" },
+    humidity: { active: false, suffix: "%" },
+    pressure: { active: false, suffix: "hPa" }
   };
 
   function showStats(type) {
-    statToggled[type] = !statToggled[type];
+    statToggled[type].active = !statToggled[type].active;
     dispatch("statToggle", statToggled);
   }
 </script>
@@ -89,7 +89,7 @@
         <td>
           <div
             class="flex"
-            class:temp={statToggled.temp}
+            class:temp={statToggled.temp.active}
             on:click={() => {
               showStats('temp');
             }}>
@@ -111,7 +111,7 @@
         <td>
           <div
             class="flex"
-            class:clouds={statToggled.clouds}
+            class:clouds={statToggled.clouds.active}
             on:click={() => {
               showStats('clouds');
             }}>
@@ -139,7 +139,7 @@
         <td>
           <div
             class="flex"
-            class:humidity={statToggled.humidity}
+            class:humidity={statToggled.humidity.active}
             on:click={() => {
               showStats('humidity');
             }}>
@@ -164,7 +164,7 @@
         <td>
           <div
             class="flex"
-            class:rainsnow={statToggled.rainsnow}
+            class:rainsnow={statToggled.rainsnow.active}
             on:click={() => {
               showStats('rainsnow');
             }}>
@@ -269,7 +269,7 @@
         <td>
           <div
             class="flex"
-            class:wind={statToggled.wind}
+            class:wind={statToggled.wind.active}
             on:click={() => {
               showStats('wind');
             }}>
@@ -294,7 +294,7 @@
         <td>
           <div
             class="flex"
-            class:pressure={statToggled.pressure}
+            class:pressure={statToggled.pressure.active}
             on:click={() => {
               showStats('pressure');
             }}>
@@ -313,7 +313,7 @@
                 2.594-0.969 2.203 0 4 1.797 4 4 0 0.766-0.219 1.516-0.641 2.156
                 2.719 0.641 4.641 3.063 4.641 5.844z" />
             </svg>
-            {activeForecast.main.grnd_level}
+            {activeForecast.main.grnd_level} hPa
           </div>
         </td>
       </tr>

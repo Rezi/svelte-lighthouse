@@ -18,7 +18,7 @@ export function getColors(locals, sunAngleDeg) {
   const moonOpacity01To1 = 1 - lightnessExponential * 0.45;
   const starsOpacity0To1 = 1 - lightnessExponential - cloudsInPercent / 100;
 
-  const cloudBrightness = lightnessExponential / 2.06 + 0.12;
+  const cloudBrightness = lightnessExponential / 2.09 + 0.18;
 
   const darkness = 1 - lightness / 100;
 
