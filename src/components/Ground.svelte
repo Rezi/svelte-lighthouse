@@ -37,6 +37,7 @@
     .direction {
       padding-left: $cardinalDirectionsShift;
       width: 25vw;
+      position: relative;
     }
   }
 </style>
@@ -47,9 +48,13 @@
     style="background: linear-gradient( 0deg, {groundBottomHsl} 89%, {groundTopHsl}
     100% );" />
   <div class="cardinal-directions">
-    <div class="direction">N</div>
-    <div class="direction">E</div>
-    <div class="direction">S</div>
-    <div class="direction">W</div>
+    <div class="direction">
+      <!-- N -->
+    </div>
+    <div class="direction">East</div>
+    <div class="direction">
+      <!-- S -->
+    </div>
+    <div class="direction">West</div>
   </div>
 </div>

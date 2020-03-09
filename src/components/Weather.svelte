@@ -46,7 +46,8 @@
     columnWidth: 180,
     prevMoonPhase: null,
     nearestForecastDate: null,
-    scrollLeftGrouped: 0
+    scrollLeftGrouped: 0,
+    timezone: 0
   };
 
   const memoizedColors = memoize(getColors);
@@ -55,6 +56,7 @@
     // locals.disableGlow = isMobileDevice();
     fetchForecast(id).then(data => {
       locals.dataSet = data;
+      locals.timezone = data.city.timezone;
       locals.dataSet.list = locals.dataSet.list.map(forecast => {
         const fallType = forecast.rain ? "rain" : "snow";
         const rain = forecast.rain && forecast.rain["3h"];
@@ -93,7 +95,9 @@
   }
 
   function setDefaultValues(data) {
-    const nearestForecastDate = new Date(data.list[0].dt * 1000);
+    const nearestForecastDate = new Date(
+      data.list[0].dt * 1000 + data.city.timezone * 1000
+    );
     const prevMoonPhase = sunCalc.getMoonIllumination(nearestForecastDate)
       .phase;
 

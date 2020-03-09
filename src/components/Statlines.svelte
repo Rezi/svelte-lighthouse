@@ -50,6 +50,22 @@
     top: $top;
     left: 50vw;
 
+    &:before {
+      top: 0;
+    }
+    &:after {
+      bottom: 0;
+    }
+    &:before,
+    &:after {
+      content: "";
+      display: block;
+      position: absolute;
+      left: -50vw;
+      right: 0;
+      border-top: 1px dashed currentColor;
+    }
+
     .stat-max {
       top: calc(#{$top} - 2rem);
     }
@@ -72,7 +88,7 @@
     height: $height;
     overflow: visible;
     stroke: currentColor;
-    border: 1px dashed currentColor;
+
     border-width: 1px 0;
   }
 

@@ -7,11 +7,10 @@
   export let locals;
   export let moonOpacity01To1 = 0;
 
-  let moonBottomPosition = 0;
-  let moonLeftPosition = 0;
-  let moonRotationDeg = 0;
   let moonLeft = 0;
   let moonRight = 0;
+  let moonStyle = "";
+  let moonPath = "";
 
   const workerFunctions =
     isBrowser() && hasWorkerSupport()
@@ -32,6 +31,10 @@
 
       if (isBrowser()) {
         window.requestAnimationFrame(() => {
+          let moonBottomPosition = 0;
+          let moonLeftPosition = 0;
+          let moonRotationDeg = 0;
+
           ({
             moonBottomPosition,
             moonLeftPosition,
@@ -39,6 +42,8 @@
             moonLeft,
             moonRight
           } = workerAnimationresult);
+          moonPath = `M16.034 21.918c${moonLeft} 0.000 ${moonLeft} -11.743 0-11.741 ${moonRight} 0.023 ${moonRight} 11.743 0 11.741z`;
+          moonStyle = `opacity:${moonOpacity01To1};transform:translate(${moonLeftPosition}vw,-${moonBottomPosition}) rotate(${moonRotationDeg}deg)`;
         });
       }
     }
@@ -76,15 +81,9 @@
   }
 </style>
 
-<div
-  class="moon"
-  style="opacity:{moonOpacity01To1};transform:translate({moonLeftPosition}vw,-{moonBottomPosition})
-  rotate({moonRotationDeg}deg)">
+<div class="moon" style={moonStyle}>
   <div class="moon-bg" />
   <svg class="moon-svg" viewBox="0 0 32 32">
-    <path
-      class:glow-filter={!locals.disableGlow}
-      d="M16.034 21.918c{moonLeft} 0.000 {moonLeft} -11.743 0-11.741 {moonRight}
-      0.023 {moonRight} 11.743 0 11.741z" />
+    <path class:glow-filter={!locals.disableGlow} d={moonPath} />
   </svg>
 </div>

@@ -8,8 +8,7 @@
   export let coords;
   export let disableGlow;
 
-  let sunBottomPosition = 0;
-  let sunLeftPosition = 0;
+  let sunStyle = 0;
 
   const dispatch = createEventDispatcher();
   const workerFunctions =
@@ -29,8 +28,10 @@
 
       if (isBrowser()) {
         window.requestAnimationFrame(() => {
-          ({ sunBottomPosition, sunLeftPosition } = workerAnimationresult);
+          const { sunBottomPosition, sunLeftPosition } = workerAnimationresult;
           dispatch("sunDegChanged", workerAnimationresult);
+          sunStyle = `transform: translate(${sunLeftPosition}vw,-${sunBottomPosition}) rotate(${sunLeftPosition *
+            -7}deg)`;
         });
       }
     }
@@ -59,9 +60,7 @@
   }
 </style>
 
-<div
-  class="sun"
-  style="transform: translate({sunLeftPosition}vw,-{sunBottomPosition}) rotate({sunLeftPosition * -7}deg)">
+<div class="sun" style={sunStyle}>
   <svg class="sun-svg" viewBox="0 0 32 32">
     <path
       class:glow-filter={!disableGlow}

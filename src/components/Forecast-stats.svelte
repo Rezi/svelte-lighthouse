@@ -6,7 +6,7 @@
   const dispatch = createEventDispatcher();
   let statToggled = {
     temp: { active: false, suffix: "°C" },
-    rainsnow: { active: false, suffix: "%" },
+    rainsnow: { active: false, suffix: "mm/h" },
     clouds: { active: false, suffix: "%" },
     wind: { active: false, suffix: "m/s" },
     humidity: { active: false, suffix: "%" },

@@ -137,6 +137,7 @@
     flex: 1 0 180px;
 
     &.active {
+      /* box-shadow: 0 0 0 1000px rgba(50, 50, 50, 0.2); */
       .forecast:after {
         content: "";
         width: 0;
@@ -184,9 +185,12 @@
         class="weather-column"
         class:active={activeForecast.dt === forecast.dt}>
         <div class="forecast">
-          {new Date(forecast.dt * 1000).toLocaleTimeString(undefined, {
-            timeStyle: 'short'
-          })}
+          {new Date(forecast.dt * 1000 + locals.timezone * 1000).toLocaleTimeString(
+            undefined,
+            {
+              timeStyle: 'short'
+            }
+          )}
           <div class="cloud" style="filter:brightness({cloudBrightness});">
             {#if cloudData[columnsRemovedFromBeginning + index].img}
               <img
