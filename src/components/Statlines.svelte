@@ -19,13 +19,18 @@
         lines = Object.entries(stats)
           .filter(([key, value]) => value.active)
           .map(([key, value]) => {
-            const { path, minValue, maxValue } = smoother.getPath(
+            let { path, minValue, maxValue } = smoother.getPath(
               locals,
               key,
               kelvins,
               graphHeight,
               columnWidth
             );
+
+            if (key === "rainsnow") {
+              minValue = minValue / 3;
+              maxValue = maxValue / 3;
+            }
             return {
               path: path,
               name: key,

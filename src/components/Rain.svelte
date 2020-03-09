@@ -7,7 +7,7 @@
   $: rain(intensity, type);
 
   function rain(intensityRain, typeRain) {
-    const dropNumber = Math.floor(intensityRain * 10);
+    const dropNumber = Math.floor(intensityRain * 6);
     if (dropNumber > 2) {
       const dropArray = Array(dropNumber).fill("");
       drops = dropArray.map(() => {
