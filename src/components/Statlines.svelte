@@ -28,8 +28,8 @@
             );
 
             if (key === "rainsnow") {
-              minValue = minValue / 3;
-              maxValue = maxValue / 3;
+              minValue = (minValue / 3).toFixed(1);
+              maxValue = (maxValue / 3).toFixed(1);
             }
             return {
               path: path,
