@@ -22,3 +22,10 @@ export function hasWorkerSupport() {
 export const isBrowser = new Function(
   "try {return this === window;}catch(e){return false;}"
 );
+
+export function getDateWithShift(dateIsoString, shiftInMinutes) {
+  const timeInMyTimezone = new Date(dateIsoString);
+  return new Date(
+    timeInMyTimezone.setTime(timeInMyTimezone.getTime() + shiftInMinutes * 1000)
+  );
+}

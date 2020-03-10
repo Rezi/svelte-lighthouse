@@ -3,7 +3,11 @@
   import { forecastMock } from "../helpers/mock";
   import { onMount } from "svelte";
   import { getColors } from "../helpers/colors";
-  import { memoize, isMobileDevice } from "../helpers/helpers";
+  import {
+    memoize,
+    isMobileDevice,
+    getDateWithShift
+  } from "../helpers/helpers";
 
   import WeatherBg from "./Weather-bg.svelte";
   import DateTime from "./Date-time.svelte";
@@ -38,6 +42,7 @@
   let windowHeight;
 
   let scrollDate = new Date();
+  let scrollDateUtc = new Date();
 
   let locals = {
     scrollFromLeft: 0,
@@ -46,6 +51,7 @@
     columnWidth: 180,
     prevMoonPhase: null,
     nearestForecastDate: null,
+    nearestForecastDateUtc: null,
     scrollLeftGrouped: 0,
     timezone: 0
   };
@@ -95,13 +101,15 @@
   }
 
   function setDefaultValues(data) {
-    const nearestForecastDate = new Date(
-      data.list[0].dt * 1000 + data.city.timezone * 1000
+    const nearestForecastDate = getDateWithShift(
+      data.list[0].dt_txt,
+      data.city.timezone
     );
-    const prevMoonPhase = sunCalc.getMoonIllumination(nearestForecastDate)
+    const nearestForecastDateUtc = new Date(data.list[0].dt * 1000);
+    const prevMoonPhase = sunCalc.getMoonIllumination(nearestForecastDateUtc)
       .phase;
 
-    return { nearestForecastDate, prevMoonPhase };
+    return { nearestForecastDate, nearestForecastDateUtc, prevMoonPhase };
   }
 
   function onSetActiveForecast(forecast) {
@@ -139,6 +147,9 @@
 
     scrollDate = new Date(
       locals.nearestForecastDate.getTime() + onePxInMs * scrollLeft
+    );
+    scrollDateUtc = new Date(
+      locals.nearestForecastDateUtc.getTime() + onePxInMs * scrollLeft
     );
     scrollLeftPx = locals.scrollFromLeft;
   }
@@ -206,11 +217,16 @@
 <div class="space">
   <Stars {starsOpacity0To1} />
 
-  <Moon {scrollDate} {animationKey} {locals} {moonOpacity01To1} />
+  <Moon
+    {scrollDateUtc}
+    {animationKey}
+    {locals}
+    {moonOpacity01To1}
+    coords={locals.dataSet ? locals.dataSet.city.coord : null} />
 
   <Sun
     on:sunDegChanged={onSunDegChanged}
-    {scrollDate}
+    {scrollDateUtc}
     {animationKey}
     disableGlow={locals.disableGlow}
     coords={locals.dataSet ? locals.dataSet.city.coord : null} />
@@ -228,7 +244,8 @@
     {animationKey}
     {cloudBrightness}
     {windowWidth}
-    {windowHeight} />
+    {windowHeight}
+    timezone={locals.timezone} />
 
   <Statlines
     {windowHeight}

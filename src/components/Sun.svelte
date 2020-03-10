@@ -3,7 +3,7 @@
   import { createEventDispatcher } from "svelte";
   import { hasWorkerSupport, isBrowser } from "../helpers/helpers";
 
-  export let scrollDate;
+  export let scrollDateUtc;
   export let animationKey;
   export let coords;
   export let disableGlow;
@@ -16,7 +16,7 @@
       ? Comlink.wrap(new Worker("worker.js"))
       : undefined;
 
-  $: animateSun(scrollDate, animationKey, coords);
+  $: animateSun(scrollDateUtc, animationKey, coords);
 
   async function animateSun(date, animationKey, coords) {
     if (coords && workerFunctions) {
@@ -28,7 +28,17 @@
 
       if (isBrowser()) {
         window.requestAnimationFrame(() => {
-          const { sunBottomPosition, sunLeftPosition } = workerAnimationresult;
+          let { sunBottomPosition, sunLeftPosition } = workerAnimationresult;
+
+          // handle south hemisphere
+          if (coords.lat < 0) {
+            if (sunLeftPosition < 50) {
+              sunLeftPosition = 50 - sunLeftPosition;
+            } else {
+              sunLeftPosition = 150 - sunLeftPosition;
+            }
+          }
+
           dispatch("sunDegChanged", workerAnimationresult);
           sunStyle = `transform: translate(${sunLeftPosition}vw,-${sunBottomPosition}) rotate(${sunLeftPosition *
             -7}deg)`;

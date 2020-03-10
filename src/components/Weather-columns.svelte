@@ -2,7 +2,7 @@
   import Rain from "./Rain.svelte";
   import { createEventDispatcher } from "svelte";
   import { generateCloud } from "../helpers/cloud-generator";
-  import { memoize } from "../helpers/helpers";
+  import { memoize, getDateWithShift } from "../helpers/helpers";
 
   export let scrollLeftPx;
   export let locals;
@@ -10,6 +10,7 @@
   export let cloudBrightness;
   export let windowWidth;
   export let windowHeight;
+  export let timezone;
 
   let canvas;
   let scrollList = [];
@@ -185,7 +186,7 @@
         class="weather-column"
         class:active={activeForecast.dt === forecast.dt}>
         <div class="forecast">
-          {new Date(forecast.dt * 1000 + locals.timezone * 1000).toLocaleTimeString(
+          {getDateWithShift(forecast.dt_txt, timezone).toLocaleTimeString(
             undefined,
             {
               timeStyle: 'short'

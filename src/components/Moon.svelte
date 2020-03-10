@@ -2,9 +2,10 @@
   import * as Comlink from "comlink";
   import { hasWorkerSupport, isBrowser } from "../helpers/helpers";
 
-  export let scrollDate;
+  export let scrollDateUtc;
   export let animationKey;
   export let locals;
+  export let coords;
   export let moonOpacity01To1 = 0;
 
   let moonLeft = 0;
@@ -17,12 +18,12 @@
       ? Comlink.wrap(new Worker("worker.js"))
       : undefined;
 
-  $: animateMoon(scrollDate);
+  $: animateMoon(scrollDateUtc);
 
   async function animateMoon(date) {
     if (workerFunctions && locals && locals.dataSet) {
       const workerAnimationresult = await workerFunctions.animateMoon(
-        scrollDate,
+        date,
         animationKey,
         locals,
         moonLeft,
@@ -42,6 +43,16 @@
             moonLeft,
             moonRight
           } = workerAnimationresult);
+
+          // handle south hemisphere
+          if (coords.lat < 0) {
+            if (moonLeftPosition < 50) {
+              moonLeftPosition = 50 - moonLeftPosition;
+            } else {
+              moonLeftPosition = 150 - moonLeftPosition;
+            }
+          }
+
           moonPath = `M16.034 21.918c${moonLeft} 0.000 ${moonLeft} -11.743 0-11.741 ${moonRight} 0.023 ${moonRight} 11.743 0 11.741z`;
           moonStyle = `opacity:${moonOpacity01To1};transform:translate(${moonLeftPosition}vw,-${moonBottomPosition}) rotate(${moonRotationDeg}deg)`;
         });
