@@ -4,16 +4,26 @@
 
   let drops = [];
 
-  $: rain(intensity, type);
+  $: rain(intensity, type); // intensity mm in 3h
 
   function rain(intensityRain, typeRain) {
-    const dropNumber = Math.floor(intensityRain * 6);
+    const dropScale = Math.pow(intensityRain, 1 / 5);
+    if (intensity > 12) {
+      // only scale rain drops but not add more of them when above 15
+      intensityRain = 12;
+    }
+    const dropNumber = 10 + Math.floor(intensityRain * 4);
     if (dropNumber > 2) {
       const dropArray = Array(dropNumber).fill("");
       drops = dropArray.map(() => {
-        const dropLeft = randRange(0, 100);
-        const dropTop = randRange(-50, 150);
-        return `left:${dropLeft}%;top:${dropTop}%`;
+        return {
+          drop: `left:${Math.floor(Math.random() * 100)}%; top: ${-Math.floor(
+            Math.random() * 100
+          ) - 50}px; animation-duration: ${Math.random() +
+            0.5}s; animation-delay:${Math.random()}s;`,
+          path: `opacity:${Math.random()}; transform: scaleY( ${0.2 +
+            Math.random() * dropScale}) scaleX(${dropScale});`
+        };
       });
     }
   }
@@ -26,120 +36,62 @@
 <style type="text/scss">
   @import "../variables.scss";
 
+  *,
+  *:before,
+  *:after {
+    box-sizing: border-box;
+  }
+
   .rain {
     overflow: hidden;
     position: absolute;
-    top: 65% * $scaledown;
+    top: 55% * $scaledown;
     left: 50%;
     width: 180px;
-    height: 40vh;
+    height: 45vh;
     z-index: -1;
     transform: translateX(-50%);
   }
 
-  .drops {
-    animation: fall 0.63s linear infinite;
-    position: relative;
-    height: 100%;
-    transform: translateY(-35vh);
-  }
-
-  .drop {
-    width: 1px;
+  .rain__drop {
+    animation-iteration-count: infinite;
+    animation-name: drop;
+    animation-timing-function: linear;
     height: 3vh;
     position: absolute;
-    background-color: white;
+    overflow: visible;
   }
-
-  @keyframes fall {
-    to {
-      transform: translateY(0);
-    }
+  .rain__drop path {
+    fill: #a1c6cc;
   }
-
-  .snow {
-    overflow: hidden;
-    position: absolute;
-    top: 65% * $scaledown;
-    left: 50%;
-    width: 180px;
-    height: 40vh;
-    z-index: -1;
-    transform: translateX(-50%);
-  }
-
-  .flakes {
-    animation: snowing 3s linear infinite;
-    position: relative;
-    height: 100%;
-    transform: translateY(-35vh);
-  }
-
-  .flake,
-  .flake:before,
-  .flake:after {
-    content: "";
-    display: block;
-    width: 0.1rem;
-    height: 0.6rem;
-    position: absolute;
-    background-color: white;
-  }
-
-  .flake:before {
-    transform-origin: center center;
-    transform: rotate(120deg);
-  }
-
-  .flake:after {
-    transform-origin: center center;
-    transform: rotate(240deg);
-  }
-
-  @keyframes snowing {
-    0% {
-      transform: translateY(-35vh) translateX(0.5rem);
-    }
-    10% {
-      transform: translateY(-31.5vh) translateX(-0.5rem);
-    }
-    20% {
-      transform: translateY(-28vh) translateX(0.7rem);
-    }
-    30% {
-      transform: translateY(-24.5vh) translateX(-0.5rem);
-    }
-    40% {
-      transform: translateY(-21vh) translateX(0.1rem);
-    }
-    50% {
-      transform: translateY(-17.5vh) translateX(-0.4rem);
-    }
-    60% {
-      transform: translateY(-14vh) translateX(1rem);
-    }
-    70% {
-      transform: translateY(-10.5vh) translateX(-1rem);
-    }
-    80% {
-      transform: translateY(-7vh) translateX(0.2rem);
-    }
+  @keyframes drop {
     90% {
-      transform: translateY(-3.5vh) translateX(-0.8rem);
+      opacity: 1;
     }
     100% {
-      transform: translateY(0) translateX(0.5rem);
+      opacity: 0;
+      transform: translateY(35vh);
     }
   }
 </style>
 
 {#if type === 'rain'}
   <div class="rain">
-    <div class="drops">
-      {#each drops as drop}
-        <div class="drop" style={drop} />
-      {/each}
-    </div>
+    {#each drops as item}
+      <svg
+        class="rain__drop"
+        preserveAspectRatio="xMinYMin"
+        viewBox="0 0 5 50"
+        style={item.drop}>
+        <path
+          style={item.path}
+          stroke="none"
+          d="M 2.5,0 C 2.6949458,3.5392017 3.344765,20.524571 4.4494577,30.9559
+          5.7551357,42.666753 4.5915685,50 2.5,50 0.40843152,50
+          -0.75513565,42.666753 0.55054234,30.9559 1.655235,20.524571
+          2.3050542,3.5392017 2.5,0 Z" />
+      </svg>
+    {/each}
   </div>
 {:else}
   <div class="snow">
