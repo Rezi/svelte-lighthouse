@@ -115,6 +115,7 @@
       fill: currentColor;
       width: 65vw;
       max-width: 30rem;
+      max-height: 25vh;
     }
   }
 
