@@ -6,7 +6,7 @@
 
   $: rain(intensity, type); // intensity mm in 3h
 
-  function rain(intensityRain, typeRain) {
+  function rain(intensityRain, fallType) {
     const dropScale = Math.pow(intensityRain, 1 / 5);
     if (intensity > 12) {
       // only scale rain drops but not add more of them when above 15
@@ -15,14 +15,16 @@
     const dropNumber = 10 + Math.floor(intensityRain * 4);
     if (dropNumber > 2) {
       const dropArray = Array(dropNumber).fill("");
+      const animationDuration = fallType === "snow" ? 4 : 0.5;
       drops = dropArray.map(() => {
         return {
           drop: `left:${Math.floor(Math.random() * 100)}%; top: ${-Math.floor(
             Math.random() * 100
           ) - 50}px; animation-duration: ${Math.random() +
-            0.5}s; animation-delay:${Math.random()}s;`,
-          path: `opacity:${Math.random()}; transform: scaleY( ${0.2 +
-            Math.random() * dropScale}) scaleX(${dropScale});`
+            animationDuration}s; animation-delay:${-Math.random() *
+            animationDuration}s;`,
+          path: `opacity:${Math.random()}; transform: scale( ${0.2 +
+            Math.random() * dropScale});`
         };
       });
     }
@@ -42,7 +44,7 @@
     box-sizing: border-box;
   }
 
-  .rain {
+  .snowrain {
     overflow: hidden;
     position: absolute;
     top: 55% * $scaledown;
@@ -61,6 +63,16 @@
     position: absolute;
     overflow: visible;
   }
+  .snow__flake {
+    animation-iteration-count: infinite;
+    animation-name: flake;
+    animation-timing-function: linear;
+    height: 0.5vh;
+    width: 0.5vh;
+    border-radius: 50%;
+    position: absolute;
+    background-color: #fff;
+  }
   .rain__drop path {
     fill: #a1c6cc;
   }
@@ -73,10 +85,32 @@
       transform: translateY(35vh);
     }
   }
+  @keyframes flake {
+    0% {
+      opacity: 1;
+      transform: translate(0.5rem, 0);
+    }
+    25% {
+      transform: translate(-0.5rem, 9vh);
+    }
+    50% {
+      transform: translate(0.5rem, 18vh);
+    }
+    75% {
+      transform: translate(-0.5rem, 27vh);
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translate(0.5rem, 36vh);
+    }
+  }
 </style>
 
 {#if type === 'rain'}
-  <div class="rain">
+  <div class="snowrain">
     {#each drops as item}
       <svg
         class="rain__drop"
@@ -86,19 +120,16 @@
         <path
           style={item.path}
           stroke="none"
-          d="M 2.5,0 C 2.6949458,3.5392017 3.344765,20.524571 4.4494577,30.9559
-          5.7551357,42.666753 4.5915685,50 2.5,50 0.40843152,50
-          -0.75513565,42.666753 0.55054234,30.9559 1.655235,20.524571
-          2.3050542,3.5392017 2.5,0 Z" />
+          d="M 2.5,0 C 2.69,3.54 3.344,20.52 4.45,30.96 5.76,42.67 4.6,50 2.5,50
+          0.41,50 -0.76,42.7 0.56,30.96 1.66,20.52 2.31,3.54 2.5,0 Z" />
       </svg>
     {/each}
   </div>
 {:else}
-  <div class="snow">
-    <div class="flakes">
-      {#each drops as drop}
-        <div class="flake" style={drop} />
-      {/each}
-    </div>
+  <div class="snowrain">
+    {#each drops as item}
+      <div class="snow__flake" style={item.drop + item.path} />
+    {/each}
+
   </div>
 {/if}
