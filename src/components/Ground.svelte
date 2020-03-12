@@ -23,7 +23,7 @@
 
 <style type="text/scss">
   @import "../variables.scss";
-  $size: 300vh; // earth diameter
+  $size: 500vw; // earth diameter
 
   .ground-wrap {
     overflow: hidden;
