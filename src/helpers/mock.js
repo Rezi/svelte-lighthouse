@@ -18,7 +18,7 @@ export const forecastMock = {
       },
       weather: [
         {
-          id: 500,
+          id: 200,
           main: "Rain",
           description: "light rain",
           icon: "10n"

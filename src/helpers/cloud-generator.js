@@ -6,7 +6,8 @@ function setCloudGradient(
   xOuter,
   yOuter,
   outerRadius,
-  clouds
+  clouds,
+  rainsnowInMm = 0
 ) {
   const cloudGradient = ctx.createRadialGradient(
     x,
@@ -17,9 +18,22 @@ function setCloudGradient(
     outerRadius
   );
   const cloudOpacity = clouds / 150 + 0.25; // 0.25 - 1
-  cloudGradient.addColorStop(0, `hsla(0, 0%, 100%, ${cloudOpacity})`);
-  cloudGradient.addColorStop(0.6, `hsla(202, 22%, 90%, ${cloudOpacity})`);
-  cloudGradient.addColorStop(1, `hsla(190, 17%, 65%, ${cloudOpacity})`);
+
+  let darkness = Math.pow(1 + rainsnowInMm, 1.5);
+  darkness = darkness > 40 ? 40 : darkness;
+
+  cloudGradient.addColorStop(
+    0,
+    `hsla(0, 0%, ${100 - darkness}%, ${cloudOpacity})`
+  );
+  cloudGradient.addColorStop(
+    0.6,
+    `hsla(202, 22%, ${90 - darkness}%, ${cloudOpacity})`
+  );
+  cloudGradient.addColorStop(
+    1,
+    `hsla(190, 17%, ${65 - darkness}%, ${cloudOpacity})`
+  );
   ctx.fillStyle = cloudGradient;
 }
 
@@ -42,6 +56,7 @@ export function generateCloud(
     return "";
   }
   const width = columnWidth + baseCloudBall;
+  const rainsnowInMm = rain || snow || 0;
 
   const maxCloudHeight = columnHeight / 3;
   const height = (maxCloudHeight * clouds) / 100;
@@ -95,7 +110,8 @@ export function generateCloud(
         positionLeft,
         cloudBallPositionBottom - ballHeight * 1.8,
         ballHeight * 2.2,
-        clouds
+        clouds,
+        rainsnowInMm
       );
 
       ctx.beginPath();

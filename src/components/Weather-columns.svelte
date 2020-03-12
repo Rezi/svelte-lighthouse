@@ -1,5 +1,6 @@
 <script>
   import Rain from "./Rain.svelte";
+  import Lightning from "./Lightning.svelte";
   import { createEventDispatcher } from "svelte";
   import { generateCloud } from "../helpers/cloud-generator";
   import { memoize, getDateWithShift } from "../helpers/helpers";
@@ -20,6 +21,7 @@
   let beforePadding = 0;
   let afterPadding = 0;
   let downscaled = 5;
+  let lightning = false;
 
   const memoizedCloudGenerator = memoize(generateCloud);
   const dispatch = createEventDispatcher();
@@ -91,10 +93,19 @@
 
         previousColumnsRemovedFromBeginning = columnsRemovedFromBeginning;
 
-        scrollList = locals.dataSet.list.slice(
-          columnsRemovedFromBeginning,
-          sliceEnd
-        );
+        scrollList = locals.dataSet.list
+          .slice(columnsRemovedFromBeginning, sliceEnd)
+          .map(item => {
+            return {
+              ...item,
+              isThunderStorm: item.weather.some(
+                // check if code start with 2
+                condition => {
+                  return condition.id.toString()[0] === "2";
+                }
+              )
+            };
+          });
 
         const maxSliceEnd =
           sliceEnd >= numberOfItems ? numberOfItems : sliceEnd;
@@ -120,6 +131,13 @@
         }
       }
     };
+  }
+
+  function onLightning() {
+    lightning = true;
+    setTimeout(() => {
+      lightning = false;
+    }, 300);
   }
 </script>
 
@@ -165,10 +183,40 @@
   .cloud {
     position: absolute;
     width: 100%;
+    transition: filter 0.2s;
+
+    .lightning-bolt {
+      position: absolute;
+      z-index: -1;
+      top: 55% * $scaledown;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    &.lightning {
+      filter: brightness(var(--brightness));
+
+      .lightning-bolt {
+        opacity: 1;
+      }
+    }
+
     img {
       transform: scale($scaledown); // scaled down 5x
       transform-origin: top center;
     }
+  }
+
+  .lightning--flash {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #fff;
+    opacity: 0.2;
   }
 
   .canvas {
@@ -176,6 +224,7 @@
   }
 </style>
 
+<div class:lightning--flash={lightning} />
 {#if scrollList.length}
   <div
     class="weather-columns-wrap"
@@ -192,14 +241,25 @@
               timeStyle: 'short'
             }
           )}
-          <div class="cloud" style="filter:brightness({cloudBrightness});">
+          <div
+            class="cloud"
+            class:lightning
+            style="--brightness:{Math.pow(1.95 - cloudBrightness, 3)}">
+
+            <!--  cloudBrightness is 0.18 - 1 -->
             {#if cloudData[columnsRemovedFromBeginning + index].img}
               <img
                 src={cloudData[columnsRemovedFromBeginning + index].img}
+                style="filter:brightness({cloudBrightness});"
                 alt="cloud" />
             {/if}
             {#if forecast.rainSnow}
               <Rain intensity={forecast.rainSnow} type={forecast.fallType} />
+            {/if}
+            {#if forecast.isThunderStorm}
+              <div class="lightning-bolt">
+                <Lightning on:lightning={onLightning} timestamp={forecast.dt} />
+              </div>
             {/if}
           </div>
         </div>
