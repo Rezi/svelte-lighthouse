@@ -4,6 +4,7 @@
   export let groundTopHsl;
   export let scrollDateUtc;
   export let coords;
+  export let timezone;
 
   let prevDay = null;
   let sunTimes;
@@ -17,7 +18,22 @@
       prevDay = day;
       sunTimes = sunCalc.getTimes(date, coords.lat, coords.lon);
       moonTimes = sunCalc.getMoonTimes(date, coords.lat, coords.lon);
+      sunTimes.sunrise = adjustTimezone(sunTimes.sunrise);
+      sunTimes.sunset = adjustTimezone(sunTimes.sunset);
+      moonTimes.set = adjustTimezone(moonTimes.set);
+      moonTimes.rise = adjustTimezone(moonTimes.rise);
     }
+  }
+
+  function adjustTimezone(date) {
+    if (date) {
+      return new Date(
+        date.getTime() +
+          new Date().getTimezoneOffset() * 60 * 1000 +
+          timezone * 1000
+      );
+    }
+    return null;
   }
 </script>
 

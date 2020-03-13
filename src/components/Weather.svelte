@@ -237,7 +237,8 @@
   {groundBottomHsl}
   {groundTopHsl}
   coords={locals.dataSet ? locals.dataSet.city.coord : null}
-  {scrollDateUtc} />
+  {scrollDateUtc}
+  timezone={locals.timezone} />
 
 <div class="weather-scroll" on:scroll={weatherScroll}>
 
