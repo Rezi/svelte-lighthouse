@@ -1,5 +1,5 @@
 <script>
-  import { sunCalc } from "../helpers/suncalc";
+  import { sunCalc } from "../../helpers/suncalc";
   export let groundBottomHsl;
   export let groundTopHsl;
   export let scrollDateUtc;
@@ -38,7 +38,7 @@
 </script>
 
 <style type="text/scss">
-  @import "../variables.scss";
+  @import "../../variables.scss";
   $size: 500vw; // earth diameter
 
   .ground-wrap {

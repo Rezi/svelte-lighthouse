@@ -20,7 +20,7 @@
 </script>
 
 <style type="text/scss">
-  @import "../variables.scss";
+  @import "../../variables.scss";
   .flex {
     display: flex;
     align-items: center;

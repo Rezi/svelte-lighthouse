@@ -1,6 +1,6 @@
 <script>
   import * as Comlink from "comlink";
-  import { hasWorkerSupport, isBrowser } from "../helpers/helpers";
+  import { hasWorkerSupport, isBrowser } from "../../helpers/helpers";
 
   export let scrollDateUtc;
   export let animationKey;
@@ -62,7 +62,7 @@
 </script>
 
 <style type="text/scss">
-  @import "../variables.scss";
+  @import "../../variables.scss";
 
   .moon {
     $moonWidth: 10vh;

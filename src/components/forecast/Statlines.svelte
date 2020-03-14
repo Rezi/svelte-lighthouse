@@ -13,7 +13,7 @@
     if (event) {
       const stats = event.detail;
       if (stats) {
-        const smoother = await import("../helpers/smooth-curve.js");
+        const smoother = await import("../../helpers/smooth-curve.js");
         const graphHeight = windowHeight / 3;
 
         lines = Object.entries(stats)
@@ -46,7 +46,7 @@
 </script>
 
 <style type="text/scss">
-  @import "../variables.scss";
+  @import "../../variables.scss";
   $top: 45vh;
   $height: 33.33333vh;
 

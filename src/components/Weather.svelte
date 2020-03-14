@@ -9,14 +9,14 @@
     getDateWithShift
   } from "../helpers/helpers";
 
-  import WeatherBg from "./Weather-bg.svelte";
-  import DateTime from "./Date-time.svelte";
-  import Moon from "./Moon.svelte";
-  import Sun from "./Sun.svelte";
-  import Stars from "./Stars.svelte";
-  import Ground from "./Ground.svelte";
-  import WeatherColumns from "./Weather-columns.svelte";
-  import Statlines from "./Statlines.svelte";
+  import WeatherBg from "./forecast/Weather-bg.svelte";
+  import DateTime from "./forecast/Date-time.svelte";
+  import Moon from "./forecast/Moon.svelte";
+  import Sun from "./forecast/Sun.svelte";
+  import Stars from "./forecast/Stars.svelte";
+  import Ground from "./forecast/Ground.svelte";
+  import WeatherColumns from "./forecast/Weather-columns.svelte";
+  import Statlines from "./forecast/Statlines.svelte";
   export let city;
   export let id;
 

@@ -36,7 +36,7 @@
 </script>
 
 <style type="text/scss">
-  @import "../variables.scss";
+  @import "../../variables.scss";
 
   *,
   *:before,

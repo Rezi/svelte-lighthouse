@@ -2,8 +2,8 @@
   import Rain from "./Rain.svelte";
   import Lightning from "./Lightning.svelte";
   import { createEventDispatcher } from "svelte";
-  import { generateCloud } from "../helpers/cloud-generator";
-  import { memoize, getDateWithShift } from "../helpers/helpers";
+  import { generateCloud } from "../../helpers/cloud-generator";
+  import { memoize, getDateWithShift } from "../../helpers/helpers";
 
   export let scrollLeftPx;
   export let locals;
@@ -142,7 +142,7 @@
 </script>
 
 <style type="text/scss">
-  @import "../variables.scss";
+  @import "../../variables.scss";
 
   .weather-columns-wrap {
     overflow: hidden;

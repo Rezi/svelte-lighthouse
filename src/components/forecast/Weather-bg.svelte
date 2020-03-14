@@ -5,7 +5,7 @@
 </script>
 
 <style type="text/scss">
-  @import "../variables.scss";
+  @import "../../variables.scss";
 
   .weather-bg-radial {
     height: 100vh;
