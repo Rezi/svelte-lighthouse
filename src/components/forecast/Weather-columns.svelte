@@ -176,7 +176,7 @@
       position: relative;
       top: calc(25vh + 5rem);
       text-align: center;
-      color: $colorBase;
+      color: $color-active;
     }
   }
 

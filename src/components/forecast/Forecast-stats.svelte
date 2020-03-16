@@ -24,7 +24,7 @@
   .flex {
     display: flex;
     align-items: center;
-    color: $colorBase;
+    color: $color-active;
     cursor: pointer;
   }
 

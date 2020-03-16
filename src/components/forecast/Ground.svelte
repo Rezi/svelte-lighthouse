@@ -66,7 +66,7 @@
     bottom: calc(2rem + 1vh);
     display: flex;
     width: 100%;
-    color: $colorBase;
+    color: $color-base;
     font-size: 1.1rem;
 
     .direction {

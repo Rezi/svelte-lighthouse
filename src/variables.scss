@@ -1,7 +1,8 @@
 $cardinalDirectionsShift: 1rem;
 $scaledown: 5;
 
-$colorBase: wheat;
+$color-base: #fff;
+$color-active: wheat;
 
 $temp: rgb(255, 166, 0);
 $clouds: rgb(255, 255, 255);
@@ -16,4 +17,4 @@ $color-app-name: #0072a9;
 $color-search: wheat;
 $color-search-label: #fff;
 $color-temperature: #fff700;
-$color-arrow: #fff;
+$color-arrow: $color-active;

@@ -39,7 +39,7 @@
     left: 50%;
     transform: translateX(-50%);
     text-align: center;
-    color: $colorBase;
+    color: $color-base;
     width: 100%;
 
     .day {
@@ -73,7 +73,7 @@
 
     .nav--item {
       text-decoration: none;
-      color: $colorBase;
+      color: $color-active;
       display: flex;
     }
 
