@@ -14,7 +14,7 @@ This app was developed to prove, that production ready SPA app with reasonable U
 Please DON'T use this app as your weather forecast app, it has limited
 numer of requests allowed to free weather forecast by [openweathermap.org/](https://openweathermap.org/) (60 requests per hour)
 
-####List of features:
+### List of features:
 
 - PWA - works offline with cached data
 - Is installable on phone as web app
