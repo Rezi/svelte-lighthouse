@@ -31,6 +31,7 @@
 
   function countOnScrollFrameClosure() {
     let previousColumnsRemovedFromBeginning = null;
+    let previousSliceEnd = null;
     return function(scrollLeft, animate, locals) {
       if (animate && locals.dataSet) {
         const numberOfItems = locals.dataSet.list.length;
@@ -85,19 +86,23 @@
           sliceEnd = numberOfItems + 1;
         }
 
+        sliceEnd = Math.ceil(sliceEnd);
+
         if (
-          previousColumnsRemovedFromBeginning === columnsRemovedFromBeginning
+          previousColumnsRemovedFromBeginning === columnsRemovedFromBeginning &&
+          previousSliceEnd === sliceEnd
         ) {
           return;
         }
 
         previousColumnsRemovedFromBeginning = columnsRemovedFromBeginning;
-
+        previousSliceEnd = sliceEnd;
         scrollList = locals.dataSet.list
           .slice(columnsRemovedFromBeginning, sliceEnd)
-          .map(item => {
+          .map((item, index) => {
             return {
               ...item,
+              no: columnsRemovedFromBeginning + index,
               isThunderStorm: item.weather.some(
                 // check if code start with 2
                 condition => {
@@ -139,6 +144,10 @@
       lightning = false;
     }, 300);
   }
+
+  function scrollToColumn(index) {
+    dispatch("scrollTo", index);
+  }
 </script>
 
 <style type="text/scss">
@@ -172,6 +181,7 @@
     }
 
     .forecast {
+      cursor: pointer;
       font-size: 1.2rem;
       position: relative;
       top: calc(25vh + 5rem);
@@ -234,7 +244,11 @@
       <div
         class="weather-column"
         class:active={activeForecast.dt === forecast.dt}>
-        <div class="forecast">
+        <div
+          class="forecast"
+          on:click={() => {
+            scrollToColumn(forecast.no);
+          }}>
           {getDateWithShift(forecast.dt_txt, timezone).toLocaleTimeString(
             undefined,
             {

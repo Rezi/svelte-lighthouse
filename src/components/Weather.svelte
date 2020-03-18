@@ -24,7 +24,7 @@
     "https://api.openweathermap.org/data/2.5/forecast?id=_id_&APPID=a77e1d2fcad267b4ba535bd5fd05b6e7";
 
   let animationKey = true;
-
+  let scrollWrapElement;
   let scrollLeftPx;
   let activeForecast;
 
@@ -162,6 +162,11 @@
 
     return data;
   };
+
+  function scrollTo(event) {
+    const scrollFromLeft = event.detail * locals.columnWidth;
+    scrollWrapElement.scrollLeft = scrollFromLeft;
+  }
 </script>
 
 <style type="text/scss">
@@ -240,10 +245,14 @@
   {scrollDateUtc}
   timezone={locals.timezone} />
 
-<div class="weather-scroll" on:scroll={weatherScroll}>
+<div
+  class="weather-scroll"
+  on:scroll={weatherScroll}
+  bind:this={scrollWrapElement}>
 
   <WeatherColumns
     on:setActiveForecast={onSetActiveForecast}
+    on:scrollTo={scrollTo}
     {scrollLeftPx}
     {locals}
     {animationKey}

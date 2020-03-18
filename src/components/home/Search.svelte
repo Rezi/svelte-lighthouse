@@ -1,10 +1,17 @@
 <script>
   import { isBrowser } from "../../helpers/helpers";
+  import { onMount } from "svelte";
 
   let value;
-  let cities = JSON.parse(localStorage.getItem("cities")) || [];
+  let cities = [];
 
   $: fetchCities(value);
+
+  onMount(() => {
+    if (isBrowser()) {
+      cities = JSON.parse(localStorage.getItem("cities")) || [];
+    }
+  });
 
   function addCity(city, event) {
     if (isBrowser()) {

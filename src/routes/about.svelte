@@ -30,9 +30,12 @@
       height: 2rem;
     }
   }
+  a {
+    color: $color-active;
+  }
 
   .text {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     color: $color-base;
     padding: 4rem 2rem;
   }
@@ -59,31 +62,45 @@
 
   <div class="text">
     <h2>About the weather app</h2>
-    Lorem ipsum dolor sit amet consectetur adipisicing elit. Necessitatibus
-    atque ipsa quibusdam. Vel aut suscipit vitae cupiditate amet illo expedita
-    consectetur quo animi tempora, omnis illum, cum id, laudantium maxime.
-    Asperiores fuga nam fugit necessitatibus tempora ipsa! Voluptatum et quis,
-    molestiae quos magni hic necessitatibus nobis voluptates aliquam, placeat
-    nesciunt. At cupiditate eaque doloribus rem molestiae odio laboriosam rerum
-    asperiores. Soluta sapiente similique tempora aspernatur consectetur
-    voluptatibus pariatur fugit distinctio amet at nulla nemo itaque repudiandae
-    exercitationem, magnam excepturi quaerat est. Vero obcaecati quo amet
-    voluptatum itaque modi incidunt laboriosam. Magnam, omnis sint, dolorum
-    accusantium qui, officiis minima voluptatum nostrum error illo eligendi
-    soluta doloribus. Quasi, quibusdam in. Nisi ducimus debitis quam iure
-    eveniet cupiditate natus doloremque, totam voluptas deleniti! Placeat veniam
-    quo architecto ullam, eveniet molestias doloremque maiores esse fugiat in
-    quibusdam animi deleniti, consequatur accusantium ipsum voluptas aspernatur
-    porro quas expedita sed vel amet obcaecati? Eum, hic officia? Laudantium
-    labore est provident quo fugit. Alias pariatur beatae ratione doloremque
-    explicabo sint minus, itaque odit expedita ad quos magnam officia animi
-    reiciendis, ab culpa quisquam porro, quis nam saepe? Suscipit, ratione
-    similique repudiandae debitis corrupti minima officiis distinctio fugit
-    blanditiis et quibusdam, labore perspiciatis facere eligendi! Distinctio in
-    dignissimos labore sit debitis, laborum neque eligendi, repellendus quo
-    magni dolores? Eveniet, tempore illum officiis neque natus praesentium
-    exercitationem, cumque error quisquam dignissimos optio expedita vero.
-    Similique ad, voluptas atque assumenda error, minus enim fuga laborum,
-    facere exercitationem sequi a. Ratione?
+    <p>
+      This app was developed to prove, that production ready SPA app with
+      reasonable UX quality can reach max (100%)
+      <a href="https://web.dev/measure/">lighthouse score</a>
+      .
+    </p>
+    <p>
+      Please DON'T use this app as your weather forecast app, it has limited
+      numer of requests allowed to free weather forecast by
+      <a href="https://openweathermap.org/">openweathermap.org/</a>
+      (60 requests per hour)
+    </p>
+    <p>
+      Made by Tomas Rezac:
+      <a href="https://github.com/Rezi/svelte-lighthouse/tree/feature/weather">
+        Github repo
+      </a>
+    </p>
+    <p>List of features:</p>
+    <ul>
+
+      <li>PWA - works offline with cached data</li>
+      <li>Is installable on phone as web app</li>
+      <li>Search forecast by city</li>
+      <li>Remember searched cities</li>
+      <li>Each of six main weather parameters can be visualized as a chart</li>
+      <li>
+        Show forecast via animated scenery (generated clouds with different
+        size, opacity and color based on rain, cloudiness and sun angle)
+      </li>
+      <li>Show animated rain and show fall, based on it intensity</li>
+      <li>Show animated thunderstorms</li>
+      <li>Show times of sun/moon rise/set and animate sun/moon accordingly</li>
+      <li>Show sun/moon directions from Eeast to West</li>
+      <li>
+        Show sun/moon angle above horizon based on time and period of year
+      </li>
+      <li>Show phases of moon in realtime</li>
+
+    </ul>
   </div>
 </section>
