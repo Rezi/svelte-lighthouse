@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.bluestep.portal.se",
+      "sha256_cert_fingerprints": [
+        "4E:CD:80:11:D3:25:05:E0:68:03:28:CB:5C:2D:ED:30:37:17:C6:78:2B:64:2D:03:AA:D1:BB:1B:B9:3C:6E:F8"
+      ]
+    }
+  }
+]
